@@ -135,6 +135,7 @@
     @keyframes celebBounce{0%{opacity:0;transform:scale(0.3) rotate(-15deg);}60%{transform:scale(1.2) rotate(5deg);}100%{opacity:1;transform:scale(1) rotate(0);}}
     @keyframes celebFadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
     @keyframes slideIn{from{opacity:0;transform:translateX(12px);}to{opacity:1;transform:translateX(0);}}
+    @media(max-width:768px){
       .home-hero{grid-template-columns:1fr;gap:40px;padding:48px 20px 40px;}
       .dice-cluster{display:none;}
       .tutorial-hero-inner{grid-template-columns:1fr;}
@@ -184,7 +185,7 @@
 
   <div class="stats-bar">
     <div class="stats-inner">
-      <div style="text-align:center;"><div class="stat-num">1</div><div class="stat-label">Game available now</div></div>
+      <div style="text-align:center;"><div class="stat-num">2</div><div class="stat-label">Games available now</div></div>
       <div style="text-align:center;"><div class="stat-num">5 min</div><div class="stat-label">To learn each game</div></div>
       <div style="text-align:center;"><div class="stat-num">Free</div><div class="stat-label">Always & forever</div></div>
       <div style="text-align:center;"><div class="stat-num">All ages</div><div class="stat-label">Beginner friendly</div></div>
@@ -237,7 +238,7 @@
         <div class="game-card-body">
           <h3>Uno</h3>
           <p>Match colors and numbers, play action cards, and be first to shout "Uno!" 6 versions available.</p>
-          <div class="game-meta"><span>2–10 players</span><span>6 versions</span></div>
+          <div class="game-meta"><span>2–10 players</span><span>7 versions</span></div>
           <div class="card-cta">
             <span class="badge-teal" id="uno-card-badge" style="font-size:0.7rem;">Available now</span>
             <button class="learn-btn" style="background:#DC2626;" onclick="showPage('uno-versions')">Pick a version</button>
@@ -270,7 +271,7 @@
     <div style="max-width:900px;margin:0 auto;text-align:center;">
       <span class="badge" style="background:rgba(255,255,255,0.2);color:white;">Card Games</span>
       <h1 style="font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(2rem,5vw,3rem);color:white;margin:16px 0 14px;">Which Uno are you playing?</h1>
-      <p style="color:#FECACA;font-size:1rem;line-height:1.7;max-width:520px;margin:0 auto;">Six versions, each with its own twist. Pick one to learn how to play.</p>
+      <p style="color:#FECACA;font-size:1rem;line-height:1.7;max-width:520px;margin:0 auto;">Seven versions, each with its own twist. Pick one to learn how to play.</p>
     </div>
   </section>
 
@@ -278,17 +279,20 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px;">
 
       <!-- Standard -->
-      <div class="game-card" onclick="showPage('uno-standard')" style="cursor:pointer;">
+      <div class="game-card" style="cursor:default;">
         <div class="game-card-thumb" style="background:linear-gradient(135deg,#FEE2E2,#FCA5A5);">
           <span style="font-size:3.5rem;">🟥🟦🟩🟨</span>
         </div>
         <div class="game-card-body">
           <h3>Standard Uno</h3>
           <p>The classic 108-card deck. Match colors and numbers, play action cards, and shout "Uno!" first.</p>
-          <div class="game-meta"><span>2–10 players</span><span>Ages 7+</span></div>
+          <div class="game-meta"><span>2–10 players</span></div>
           <div class="card-cta" style="margin-top:14px;">
-            <span class="badge-teal" style="font-size:0.7rem;">Available now</span>
-            <button class="learn-btn">Learn to play</button>
+            <span class="badge-teal" id="uno-standard-badge" style="font-size:0.7rem;">Available now</span>
+            <div style="display:flex;gap:8px;">
+              <button class="learn-btn" style="background:#DC2626;" onclick="showPage('uno-game')">🎴 Play now</button>
+              <button class="learn-btn" onclick="showPage('uno-standard')">Learn to play</button>
+            </div>
           </div>
         </div>
       </div>
@@ -402,7 +406,7 @@
   <div style="max-width:1120px;margin:0 auto;padding:56px 24px 0;">
     <span class="badge-teal">Step by Step</span>
     <h2 style="font-size:1.8rem;font-weight:800;margin-top:10px;">How to play Standard Uno</h2>
-    <p style="color:var(--muted);margin-top:8px;">Seven steps and you're ready to shout Uno!</p>
+    <p style="color:var(--muted);margin-top:8px;">Six steps and you're ready to shout Uno!</p>
 
     <div id="uno-slideshow" style="margin-top:32px;background:white;border:1.5px solid var(--border);border-radius:24px;overflow:hidden;">
       <div style="display:grid;grid-template-columns:1fr 1fr;min-height:400px;">
@@ -514,7 +518,7 @@
   <div class="tutorial-content">
     <span class="badge-teal">Step by Step</span>
     <h2 style="font-size:1.8rem;font-weight:800;margin-top:10px;">How to play</h2>
-    <p style="color:var(--muted);margin-top:8px;">Six steps and you're ready to play your first game.</p>
+    <p style="color:var(--muted);margin-top:8px;">Seven steps and you're ready to play your first game.</p>
 
     <!-- INTERACTIVE SLIDESHOW -->
     <div id="slideshow" style="margin-top:36px;background:white;border:1.5px solid var(--border);border-radius:24px;overflow:hidden;">
@@ -624,20 +628,6 @@
 
   <div style="text-align:center;padding:0 24px 64px;">
     <button class="btn-outline" onclick="showPage('home')">← Back to all games</button>
-  </div>
-
-  <!-- CELEBRATION OVERLAY -->
-  <div id="celebrate-overlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(13,148,136,0.97);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;">
-    <canvas id="confetti-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"></canvas>
-    <div style="position:relative;z-index:2;">
-      <div id="celebrate-emoji" style="font-size:5rem;margin-bottom:16px;animation:celebBounce 0.8s cubic-bezier(0.34,1.56,0.64,1) both;"></div>
-      <h1 id="celebrate-title" style="font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(1.8rem,5vw,3rem);color:white;margin-bottom:14px;animation:celebFadeUp 0.6s 0.2s both;"></h1>
-      <p id="celebrate-sub" style="color:var(--teal-light);font-size:1.1rem;max-width:480px;line-height:1.7;margin:0 auto 32px;animation:celebFadeUp 0.6s 0.35s both;"></p>
-      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:celebFadeUp 0.6s 0.5s both;">
-        <button onclick="closeCelebrate()" style="background:var(--amber);color:var(--ink);font-family:'Sora',sans-serif;font-weight:800;font-size:1rem;padding:14px 28px;border-radius:14px;border:none;cursor:pointer;transition:transform 0.1s;">🎮 Browse more games</button>
-        <button onclick="closeCelebrate()" style="background:rgba(255,255,255,0.15);color:white;font-family:'Sora',sans-serif;font-weight:700;font-size:1rem;padding:14px 28px;border-radius:14px;border:2px solid rgba(255,255,255,0.4);cursor:pointer;">← Back to tutorial</button>
-      </div>
-    </div>
   </div>
 
   <footer>
@@ -1148,22 +1138,29 @@
   ];
   let rollResults = [];
 
+  let rollOffTimeouts = [];
+
   function resetRollOff() {
+    rollOffTimeouts.forEach(t => clearTimeout(t));
+    rollOffTimeouts = [];
     rollResults = [];
-    document.getElementById('roll-results').innerHTML = '';
-    document.getElementById('rolloff-reset').style.display = 'none';
-    setTimeout(runAutoRoll, 600);
+    const container = document.getElementById('roll-results');
+    if(container) container.innerHTML = '';
+    const resetBtn = document.getElementById('rolloff-reset');
+    if(resetBtn) resetBtn.style.display = 'none';
+    rollOffTimeouts.push(setTimeout(runAutoRoll, 600));
   }
 
   function runAutoRoll() {
     rollResults = [];
-    document.getElementById('roll-results').innerHTML = '';
+    const container = document.getElementById('roll-results');
+    if(container) container.innerHTML = '';
     PLAYERS.forEach((p, i) => {
-      setTimeout(() => {
+      const t = setTimeout(() => {
         const roll = Math.floor(Math.random() * 6) + 1;
         rollResults.push({...p, roll});
-
-        const container = document.getElementById('roll-results');
+        const c = document.getElementById('roll-results');
+        if(!c) return;
         const row = document.createElement('div');
         row.style.cssText = `display:flex;align-items:center;gap:10px;padding:8px 12px;background:white;border:1.5px solid var(--border);border-radius:10px;animation:slideIn 0.3s ease;`;
         row.innerHTML = `
@@ -1172,11 +1169,9 @@
           <span style="font-size:1rem;">🎲</span>
           <span style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.1rem;color:${p.color};">${roll}</span>
         `;
-        container.appendChild(row);
-
-        // After last player, show ranking
+        c.appendChild(row);
         if (i === PLAYERS.length - 1) {
-          setTimeout(() => {
+          const t2 = setTimeout(() => {
             const sorted = [...rollResults].sort((a,b) => b.roll - a.roll);
             const order = sorted.map(p => `<span style="color:${p.color};font-weight:700;">${p.name}</span>`).join(' → ');
             const winner = document.createElement('div');
@@ -1186,11 +1181,15 @@
               <div style="font-size:0.82rem;line-height:1.6;">${order}</div>
               <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;font-style:italic;">${sorted[0].name} rolled ${sorted[0].roll} — goes first!</div>
             `;
-            container.appendChild(winner);
-            document.getElementById('rolloff-reset').style.display = '';
+            const c2 = document.getElementById('roll-results');
+            if(c2) c2.appendChild(winner);
+            const rb = document.getElementById('rolloff-reset');
+            if(rb) rb.style.display = '';
           }, 500);
+          rollOffTimeouts.push(t2);
         }
       }, i * 700);
+      rollOffTimeouts.push(t);
     });
   }
 
@@ -1271,7 +1270,8 @@
 
   // ── CELEBRATION ──
   const GAME_DATA = {
-    'Snake & Ladders': { emoji: '🐍🪜', title: "You learned Snake & Ladders!", sub: "You now know how to set up the board, roll to decide who goes first, move your token, climb ladders, dodge snakes, and race to square 100. Time to play!" }
+    'Snake & Ladders': { emoji: '🐍🪜', title: "You learned Snake & Ladders!", sub: "You now know how to set up the board, roll to decide who goes first, move your token, climb ladders, dodge snakes, and race to square 100. Time to play!" },
+    'Standard Uno': { emoji: '🎴', title: "You learned Standard Uno!", sub: "You now know how to deal, match cards, play action and wild cards, shout Uno, and win. Time to play!" }
   };
 
   const completedGames = new Set();
@@ -1282,6 +1282,14 @@
       const btn = document.getElementById('sl-card-btn');
       if (badge) { badge.textContent = '✅ Completed'; badge.style.background = '#DCFCE7'; badge.style.color = '#15803D'; }
       if (btn) { btn.textContent = '↺ Learn again'; btn.style.background = '#0A7970'; }
+    }
+    if (gameName === 'Standard Uno') {
+      const badge = document.getElementById('uno-card-badge');
+      const badge2 = document.getElementById('uno-standard-badge');
+      if (badge) { badge.textContent = '✅ Completed'; badge.style.background = '#DCFCE7'; badge.style.color = '#15803D'; }
+      if (badge2) { badge2.textContent = '✅ Completed'; badge2.style.background = '#DCFCE7'; badge2.style.color = '#15803D'; }
+      const btns = document.querySelectorAll('#page-uno-versions .learn-btn');
+      btns.forEach(btn => { if(btn.textContent.trim() === 'Learn to play') { btn.textContent = '↺ Learn again'; btn.style.background = '#0A7970'; }});
     }
   }
 
@@ -1364,7 +1372,11 @@
     document.getElementById('nav-home-links').style.display = isHome ? '' : 'none';
     const backBtn = document.getElementById('nav-back-btn');
     backBtn.style.display = isHome ? 'none' : 'flex';
-    backBtn.onclick = id === 'sl-game' ? () => showPage('home') : () => showPage('home');
+    backBtn.textContent = (id === 'uno-standard' || id === 'uno-game') ? '← Uno Versions' : '← All Games';
+    backBtn.onclick = () => {
+      if (id === 'uno-standard' || id === 'uno-game') showPage('uno-versions');
+      else showPage('home');
+    };
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (id === 'snake-ladders') {
       cancelAnimationFrame(animFrame);
@@ -1378,6 +1390,12 @@
       cancelAnimationFrame(unoAnimFrame);
       unoStartTime = null;
       setTimeout(() => unoStep(0), 80);
+    } else if (id === 'uno-game') {
+      cancelAnimationFrame(animFrame);
+      cancelAnimationFrame(unoAnimFrame);
+      document.getElementById('uno-setup').style.display='block';
+      document.getElementById('uno-game-area').style.display='none';
+      document.getElementById('uno-winner').style.display='none';
     } else {
       cancelAnimationFrame(animFrame);
       cancelAnimationFrame(unoAnimFrame);
@@ -1604,7 +1622,6 @@
         ctx.beginPath(); ctx.moveTo(W/2-8,103); ctx.lineTo(W/2+8,103); ctx.lineTo(W/2,118); ctx.fill();
       }
     },
-,
     {
       title: 'Win the round!',
       desc: 'First player to play all their cards wins! Empty your entire hand before anyone else and you take the victory.',
@@ -1636,7 +1653,7 @@
     const canvas=document.getElementById('unoCanvas');
     if(!canvas){cancelAnimationFrame(unoAnimFrame);return;}
     const ctx=canvas.getContext('2d');
-    canvas.width=300; canvas.height=260;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     unoSteps[unoCurrentStep].draw(ctx,t);
     unoAnimFrame=requestAnimationFrame(unoRenderLoop);
   }
@@ -1644,9 +1661,10 @@
   function unoStep(i){
     if(i<0||i>=unoSteps.length) return;
     cancelAnimationFrame(unoAnimFrame);
-    unoStartTime=null;
-    unoCurrentStep=i;
-    const s=unoSteps[i];
+    unoAnimFrame = null;
+    unoStartTime = null;
+    unoCurrentStep = i;
+    const s = unoSteps[i];
     document.getElementById('uno-slide-num').textContent='0'+(i+1);
     document.getElementById('uno-slide-title').textContent=s.title;
     document.getElementById('uno-slide-desc').textContent=s.desc;
@@ -1657,9 +1675,9 @@
     nextBtn.textContent=i===unoSteps.length-1?'🎉 Done!':'Next →';
     nextBtn.style.background=i===unoSteps.length-1?'var(--amber)':'#DC2626';
     nextBtn.style.color=i===unoSteps.length-1?'var(--ink)':'white';
-    nextBtn.onmouseenter = i===unoSteps.length-1 ? startUnoDoneHover : null;
-    nextBtn.onmouseleave = i===unoSteps.length-1 ? stopUnoDoneHover : null;
-    // Dots
+    nextBtn.onmouseenter=i===unoSteps.length-1?startUnoDoneHover:null;
+    nextBtn.onmouseleave=i===unoSteps.length-1?stopUnoDoneHover:null;
+    // Rebuild dots — always show all steps
     const dotsEl=document.getElementById('uno-dots');
     dotsEl.innerHTML=unoSteps.map((_,d)=>
       `<div onclick="unoStep(${d})" style="flex:1;padding:13px 8px;text-align:center;cursor:pointer;
@@ -1667,7 +1685,47 @@
         background:${d===i?'#DC2626':''};color:${d===i?'white':'var(--muted)'};
         transition:background 0.2s,color 0.2s;">${d+1}</div>`
     ).join('');
-    unoAnimFrame=requestAnimationFrame(unoRenderLoop);
+    // Reset canvas size and restart loop fresh
+    const canvas = document.getElementById('unoCanvas');
+    if(canvas){ canvas.width=300; canvas.height=260; }
+    requestAnimationFrame(ts => {
+      unoStartTime = ts;
+      unoAnimFrame = requestAnimationFrame(unoRenderLoop);
+    });
+  }
+
+  function startUnoDoneHover() {
+    const btn = document.getElementById('uno-btn-next');
+    if (!btn) return;
+    btn.style.transform = 'scale(1.08)';
+    btn.style.boxShadow = '0 0 0 4px rgba(245,158,11,0.4)';
+    let el = document.getElementById('uno-done-burst');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'uno-done-burst';
+      el.style.cssText = 'position:absolute;pointer-events:none;z-index:999;font-size:1.2rem;';
+      document.body.appendChild(el);
+    }
+    const rect = btn.getBoundingClientRect();
+    const emojis = ['🎴','🌈','🎉','✨','🎊'];
+    el.innerHTML = '';
+    emojis.forEach((e, i) => {
+      const span = document.createElement('span');
+      span.textContent = e;
+      span.style.cssText = `position:fixed;left:${rect.left + rect.width/2 + (i-2)*24}px;top:${rect.top - 10}px;opacity:0;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);transform:translateY(0px) rotate(0deg);display:inline-block;`;
+      el.appendChild(span);
+      setTimeout(() => {
+        span.style.opacity = '1';
+        span.style.transform = `translateY(-${28 + i*6}px) rotate(${(i-2)*15}deg)`;
+      }, i * 60);
+    });
+  }
+
+  function stopUnoDoneHover() {
+    const btn = document.getElementById('uno-btn-next');
+    if (btn) { btn.style.transform = ''; btn.style.boxShadow = ''; }
+    const el = document.getElementById('uno-done-burst');
+    if (el) el.innerHTML = '';
   }
 
   function unoNextStep(){
@@ -1675,12 +1733,7 @@
       unoStep(unoCurrentStep+1);
     } else {
       cancelAnimationFrame(unoAnimFrame);
-      const data={emoji:'🎴',title:'You learned Standard Uno!',sub:'You now know how to deal, match cards, play action and wild cards, call Uno, challenge, and score. Time to play!'};
-      document.getElementById('celebrate-emoji').textContent=data.emoji;
-      document.getElementById('celebrate-title').textContent=data.title;
-      document.getElementById('celebrate-sub').textContent=data.sub;
-      document.getElementById('celebrate-overlay').style.display='flex';
-      startConfetti();
+      showCelebration('Standard Uno');
     }
   }
 
@@ -1832,6 +1885,7 @@
       // Head
       const HR=7,hdx=m1x-from.x,hdy=m1y-from.y,hl=Math.sqrt(hdx*hdx+hdy*hdy)||1;
       const hax=hdx/hl,hay=hdy/hl,hrx=-hay,hry=hax;
+      ctx.save();
       ctx.translate(from.x,from.y); ctx.rotate(Math.atan2(hay,hax));
       ctx.beginPath(); ctx.ellipse(HR*0.4,0,HR*1.3,HR*0.85,0,0,Math.PI*2);
       ctx.fillStyle=sc.body; ctx.fill();
@@ -2044,6 +2098,22 @@
       document.getElementById('gw-emoji').textContent=player===0?'🏆':'🤖';
       document.getElementById('gw-title').textContent=player===0?'You won!':'AI wins!';
       document.getElementById('gw-sub').textContent=player===0?'Congrats — you reached square 100 first!':'Better luck next time! The AI reached 100 first.';
+      // Confetti
+      const canvas=document.getElementById('gw-confetti');
+      if(canvas){
+        canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+        const particles=Array.from({length:100},()=>({x:Math.random()*canvas.width,y:Math.random()*-canvas.height,r:4+Math.random()*6,color:['#F59E0B','#0D9488','#EF4444','#3B82F6','#22C55E','#CCFBF1'][Math.floor(Math.random()*6)],speed:2+Math.random()*4,drift:(Math.random()-0.5)*2,angle:Math.random()*Math.PI*2,spin:(Math.random()-0.5)*0.15}));
+        let slConfetti;
+        function drawSlC(){
+          const ctx=canvas.getContext('2d');
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          particles.forEach(p=>{p.y+=p.speed;p.x+=p.drift;p.angle+=p.spin;if(p.y>canvas.height){p.y=-10;p.x=Math.random()*canvas.width;}ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.fillStyle=p.color;ctx.fillRect(-p.r/2,-p.r*0.4,p.r,p.r*0.5);ctx.restore();});
+          slConfetti=requestAnimationFrame(drawSlC);
+        }
+        drawSlC();
+        // Stop confetti when play again is clicked
+        document.getElementById('game-winner-banner').onclick=()=>cancelAnimationFrame(slConfetti);
+      }
       return;
     }
     // Next turn
@@ -2084,5 +2154,423 @@
     },55);
   }
 </script>
+<!-- ══ UNO LIVE GAME PAGE ══ -->
+<div id="page-uno-game" class="page">
+<style>
+  .uno-game-wrap{max-width:1100px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:1fr 260px;gap:20px;min-height:calc(100vh - 64px);}
+  .uno-main{display:flex;flex-direction:column;gap:16px;}
+  .uno-sidebar{display:flex;flex-direction:column;gap:12px;position:sticky;top:72px;align-self:start;}
+  .uno-discard-area{background:white;border:1.5px solid var(--border);border-radius:18px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+  .uno-hand{background:white;border:1.5px solid var(--border);border-radius:18px;padding:20px;}
+  .uno-hand h4{font-family:'Sora',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:14px;color:var(--ink);}
+  .uno-cards-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+  .uno-card{width:56px;height:80px;border-radius:8px;border:2.5px solid white;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:800;font-size:1rem;color:white;cursor:pointer;position:relative;box-shadow:0 3px 10px rgba(0,0,0,0.2);transition:transform 0.15s,box-shadow 0.15s;user-select:none;flex-shrink:0;}
+  .uno-card:hover{transform:translateY(-8px) scale(1.05);box-shadow:0 8px 20px rgba(0,0,0,0.3);}
+  .uno-card.unplayable{opacity:0.45;cursor:not-allowed;}
+  .uno-card.unplayable:hover{transform:none;box-shadow:0 3px 10px rgba(0,0,0,0.2);}
+  .uno-card.wild-card{background:linear-gradient(135deg,#EF4444 25%,#3B82F6 25%,#3B82F6 50%,#22C55E 50%,#22C55E 75%,#F59E0B 75%);}
+  .ai-panel{background:white;border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;}
+  .ai-panel h4{font-family:'Sora',sans-serif;font-weight:700;font-size:0.85rem;margin-bottom:8px;}
+  .ai-cards-back{display:flex;flex-wrap:wrap;gap:4px;}
+  .ai-card-back{width:22px;height:32px;border-radius:4px;background:#DC2626;border:1.5px solid white;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.2);}
+  .uno-status-bar{background:var(--teal);color:white;border-radius:14px;padding:14px 18px;font-family:'Sora',sans-serif;font-weight:700;font-size:0.9rem;text-align:center;}
+  .draw-btn{background:var(--amber);color:var(--ink);font-family:'Sora',sans-serif;font-weight:800;font-size:0.9rem;padding:11px 20px;border-radius:11px;border:none;cursor:pointer;width:100%;transition:background 0.15s;}
+  .draw-btn:hover{background:var(--amber-dark);}
+  .draw-btn:disabled{background:#D1D5DB;color:#9CA3AF;cursor:not-allowed;}
+  .color-picker{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;}
+  .color-picker.open{display:flex;}
+  .color-picker-box{background:white;border-radius:20px;padding:28px;text-align:center;max-width:300px;width:90%;}
+  .color-picker-box h3{font-family:'Sora',sans-serif;font-weight:800;margin-bottom:18px;}
+  .color-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .color-btn{padding:16px;border-radius:12px;border:none;cursor:pointer;font-family:'Sora',sans-serif;font-weight:800;font-size:1rem;color:white;transition:transform 0.1s;}
+  .color-btn:hover{transform:scale(1.06);}
+  .uno-winner{display:none;position:fixed;inset:0;z-index:500;background:rgba(220,38,38,0.96);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;}
+  @media(max-width:700px){.uno-game-wrap{grid-template-columns:1fr;}.uno-sidebar{position:static;}}
+</style>
+
+<div style="background:#DC2626;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;">
+  <div style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.05rem;color:white;">🎴 Standard Uno</div>
+  <button onclick="showPage('uno-versions')" style="background:rgba(255,255,255,0.15);color:white;border:1.5px solid rgba(255,255,255,0.3);font-family:'Sora',sans-serif;font-weight:600;font-size:0.82rem;padding:7px 16px;border-radius:9px;cursor:pointer;">✕ Exit</button>
+</div>
+
+<!-- Player count setup screen -->
+<div id="uno-setup" style="max-width:500px;margin:80px auto;padding:0 24px;text-align:center;">
+  <div style="font-size:3rem;margin-bottom:16px;">🎴</div>
+  <h2 style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.8rem;margin-bottom:10px;">Standard Uno</h2>
+  <p style="color:var(--muted);margin-bottom:32px;">How many players? (including you)</p>
+  <div style="display:flex;gap:14px;justify-content:center;margin-bottom:32px;">
+    <button onclick="startUnoGame(2)" style="background:white;border:2px solid var(--border);border-radius:14px;padding:20px 28px;font-family:'Sora',sans-serif;font-weight:800;font-size:1.3rem;cursor:pointer;transition:border-color 0.15s,transform 0.1s;" onmouseover="this.style.borderColor='#DC2626'" onmouseout="this.style.borderColor='var(--border)'">2</br><span style="font-size:0.7rem;font-weight:600;color:var(--muted);">You + 1 AI</span></button>
+    <button onclick="startUnoGame(3)" style="background:white;border:2px solid var(--border);border-radius:14px;padding:20px 28px;font-family:'Sora',sans-serif;font-weight:800;font-size:1.3rem;cursor:pointer;transition:border-color 0.15s,transform 0.1s;" onmouseover="this.style.borderColor='#DC2626'" onmouseout="this.style.borderColor='var(--border)'">3</br><span style="font-size:0.7rem;font-weight:600;color:var(--muted);">You + 2 AI</span></button>
+    <button onclick="startUnoGame(4)" style="background:white;border:2px solid var(--border);border-radius:14px;padding:20px 28px;font-family:'Sora',sans-serif;font-weight:800;font-size:1.3rem;cursor:pointer;transition:border-color 0.15s,transform 0.1s;" onmouseover="this.style.borderColor='#DC2626'" onmouseout="this.style.borderColor='var(--border)'">4</br><span style="font-size:0.7rem;font-weight:600;color:var(--muted);">You + 3 AI</span></button>
+  </div>
+</div>
+
+<!-- Game area (hidden until started) -->
+<div id="uno-game-area" style="display:none;">
+  <div class="uno-game-wrap">
+    <div class="uno-main">
+      <!-- AI hands -->
+      <div id="uno-ai-panels"></div>
+      <!-- Discard + draw area -->
+      <div class="uno-discard-area">
+        <div style="display:flex;gap:32px;align-items:center;justify-content:center;">
+          <div style="text-align:center;">
+            <div style="font-size:0.75rem;color:var(--muted);font-family:'Sora',sans-serif;font-weight:600;margin-bottom:8px;">DRAW PILE</div>
+            <div id="uno-draw-pile" onclick="unoDrawCard()" style="width:64px;height:90px;background:#DC2626;border:3px solid white;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:800;font-size:0.8rem;color:white;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.25);transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform=''">UNO</div>
+            <div id="deck-count" style="font-size:0.72rem;color:var(--muted);margin-top:4px;"></div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.75rem;color:var(--muted);font-family:'Sora',sans-serif;font-weight:600;margin-bottom:8px;">DISCARD PILE</div>
+            <div id="uno-top-card" style="width:64px;height:90px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:800;font-size:1.3rem;color:white;border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.25);"></div>
+            <div id="current-color-dot" style="width:16px;height:16px;border-radius:50%;margin:6px auto 0;border:2px solid #ccc;"></div>
+          </div>
+        </div>
+        <div id="uno-status-bar" class="uno-status-bar">Your turn!</div>
+      </div>
+      <!-- Player hand -->
+      <div class="uno-hand">
+        <h4>Your Hand <span id="uno-shout" style="display:none;background:#DC2626;color:white;font-size:0.7rem;padding:3px 10px;border-radius:999px;margin-left:8px;animation:celebBounce 0.4s ease;">UNO!</span></h4>
+        <div id="uno-player-hand" class="uno-cards-row"></div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
+          <button id="uno-draw-btn" class="draw-btn" onclick="unoDrawCard()">Draw a card</button>
+          <button id="uno-pass-btn" onclick="unoPass()" style="display:none;background:var(--teal);color:white;font-family:'Sora',sans-serif;font-weight:700;font-size:0.85rem;padding:11px 18px;border-radius:11px;border:none;cursor:pointer;">Pass →</button>
+        </div>
+      </div>
+    </div>
+    <div class="uno-sidebar">
+      <div class="ai-panel" style="background:var(--teal);color:white;">
+        <div style="font-family:'Sora',sans-serif;font-weight:800;font-size:0.95rem;margin-bottom:4px;">Direction</div>
+        <div id="uno-direction" style="font-size:1.4rem;text-align:center;">▶ Clockwise</div>
+      </div>
+      <div class="ai-panel">
+        <h4>Game Log</h4>
+        <div id="uno-log" style="max-height:200px;overflow-y:auto;font-size:0.75rem;color:var(--muted);display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Color picker -->
+<div id="uno-color-picker" class="color-picker">
+  <div class="color-picker-box">
+    <h3>Choose a color</h3>
+    <div class="color-btns">
+      <button class="color-btn" style="background:#EF4444;" onclick="unoPickColor('red')">🔴 Red</button>
+      <button class="color-btn" style="background:#3B82F6;" onclick="unoPickColor('blue')">🔵 Blue</button>
+      <button class="color-btn" style="background:#22C55E;" onclick="unoPickColor('green')">🟢 Green</button>
+      <button class="color-btn" style="background:#F59E0B;" onclick="unoPickColor('yellow')">🟡 Yellow</button>
+    </div>
+  </div>
+</div>
+
+<!-- Winner -->
+<div id="uno-winner" class="uno-winner">
+  <canvas id="uno-confetti" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"></canvas>
+  <div style="position:relative;z-index:2;text-align:center;">
+    <div id="uno-winner-emoji" style="font-size:5rem;margin-bottom:12px;"></div>
+    <h1 id="uno-winner-title" style="font-family:'Sora',sans-serif;font-weight:800;font-size:2.2rem;color:white;margin-bottom:10px;"></h1>
+    <p id="uno-winner-sub" style="color:#FECACA;font-size:1rem;margin-bottom:28px;"></p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="startUnoGame(unoNumPlayers)" style="background:var(--amber);color:var(--ink);font-family:'Sora',sans-serif;font-weight:800;font-size:1rem;padding:13px 26px;border-radius:13px;border:none;cursor:pointer;">🔄 Play Again</button>
+      <button onclick="showPage('uno-versions')" style="background:rgba(255,255,255,0.15);color:white;font-family:'Sora',sans-serif;font-weight:700;font-size:1rem;padding:13px 26px;border-radius:13px;border:2px solid rgba(255,255,255,0.4);cursor:pointer;">🏠 Back</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ══ UNO GAME ENGINE ══
+let unoNumPlayers=2, unoDeck=[], unoHands=[], unoDiscardPile=[], unoCurrentColor='', unoCurrentValue='', unoTurn=0, unoDirection=1, unoDrawnThisTurn=false, unoPendingWild=null, unoConfettiAnim2;
+const UNO_COLORS2=['red','blue','green','yellow'];
+const UNO_VALUES=['0','1','2','3','4','5','6','7','8','9','skip','reverse','draw2'];
+const UNO_WILD_VALUES=['wild','wild4'];
+const UNO_COLOR_HEX={red:'#EF4444',blue:'#3B82F6',green:'#22C55E',yellow:'#F59E0B',black:'#1C2B2A'};
+const UNO_AI_NAMES=['🤖 AI 1','🤖 AI 2','🤖 AI 3'];
+
+function buildUnoDeck(){
+  const deck=[];
+  UNO_COLORS2.forEach(c=>{
+    deck.push({color:c,value:'0'});
+    ['1','2','3','4','5','6','7','8','9','skip','reverse','draw2'].forEach(v=>{
+      deck.push({color:c,value:v});
+      deck.push({color:c,value:v});
+    });
+  });
+  for(let i=0;i<4;i++) deck.push({color:'black',value:'wild'},{color:'black',value:'wild4'});
+  return deck;
+}
+
+function shuffleDeck(d){for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]];}return d;}
+
+function startUnoGame(n){
+  cancelAnimationFrame(unoConfettiAnim2);
+  unoNumPlayers=n;
+  document.getElementById('uno-setup').style.display='none';
+  document.getElementById('uno-game-area').style.display='block';
+  document.getElementById('uno-winner').style.display='none';
+  unoDeck=shuffleDeck(buildUnoDeck());
+  unoHands=[];
+  for(let i=0;i<n;i++){unoHands.push([]);}
+  for(let c=0;c<7;c++) for(let i=0;i<n;i++) unoHands[i].push(unoDeck.pop());
+  // First card — skip wilds
+  let first;
+  do{ first=unoDeck.pop(); }while(first.color==='black');
+  unoDiscardPile=[first];
+  unoCurrentColor=first.color;
+  unoCurrentValue=first.value;
+  unoTurn=0; unoDirection=1; unoDrawnThisTurn=false;
+  // Apply first card effects
+  if(first.value==='skip') unoTurn=1;
+  if(first.value==='reverse' && n>2) unoDirection=-1;
+  if(first.value==='draw2'){unoHands[1].push(unoDeck.pop(),unoDeck.pop());unoTurn=1;}
+  renderUnoGame();
+  addUnoLog('🎴 Game started!');
+  if(unoTurn!==0) setTimeout(unoAITurn,900);
+}
+
+function getTopCard(){return unoDiscardPile[unoDiscardPile.length-1];}
+
+function canPlay(card){
+  if(card.color==='black') return true;
+  return card.color===unoCurrentColor||card.value===unoCurrentValue;
+}
+
+function unoCardHTML(card, idx, playable){
+  const bg = card.color==='black'
+    ? 'linear-gradient(135deg,#EF4444 25%,#3B82F6 25%,#3B82F6 50%,#22C55E 50%,#22C55E 75%,#F59E0B 75%)'
+    : UNO_COLOR_HEX[card.color];
+  const label = card.value==='wild'?'W':card.value==='wild4'?'+4':card.value==='skip'?'⊘':card.value==='reverse'?'↩':card.value==='draw2'?'+2':card.value;
+  const cls = playable?'uno-card':'uno-card unplayable';
+  const click = playable?`onclick="unoPlayCard(${idx})"`:'' ;
+  return `<div class="${cls}" style="background:${bg};" ${click} title="${card.color} ${card.value}">
+    <span style="font-size:0.65rem;position:absolute;top:3px;left:5px;">${label}</span>
+    <span>${label}</span>
+    <span style="font-size:0.65rem;position:absolute;bottom:3px;right:5px;transform:rotate(180deg);">${label}</span>
+  </div>`;
+}
+
+function renderUnoGame(){
+  const isPlayerTurn = unoTurn===0;
+  // AI panels
+  let aiHTML='';
+  for(let i=1;i<unoNumPlayers;i++){
+    const name=UNO_AI_NAMES[i-1];
+    const active=unoTurn===i;
+    aiHTML+=`<div class="ai-panel" style="margin-bottom:10px;${active?'border-color:var(--teal);box-shadow:0 4px 16px rgba(13,148,136,0.15);':''}">
+      <h4 style="display:flex;justify-content:space-between;">${name} ${active?'<span style="color:var(--teal);font-size:0.75rem;">thinking...</span>':''}
+        <span style="font-family:\'Sora\',sans-serif;font-size:0.75rem;color:var(--muted);">${unoHands[i].length} cards</span></h4>
+      <div class="ai-cards-back">${unoHands[i].map(()=>'<div class="ai-card-back"></div>').join('')}</div>
+    </div>`;
+  }
+  document.getElementById('uno-ai-panels').innerHTML=aiHTML;
+
+  // Top card
+  const top=getTopCard();
+  const topBg=top.color==='black'?'linear-gradient(135deg,#EF4444 25%,#3B82F6 25%,#3B82F6 50%,#22C55E 50%,#22C55E 75%,#F59E0B 75%)':UNO_COLOR_HEX[top.color];
+  const topLabel=top.value==='wild'?'W':top.value==='wild4'?'+4':top.value==='skip'?'⊘':top.value==='reverse'?'↩':top.value==='draw2'?'+2':top.value;
+  document.getElementById('uno-top-card').style.background=topBg;
+  document.getElementById('uno-top-card').textContent=topLabel;
+  document.getElementById('current-color-dot').style.background=UNO_COLOR_HEX[unoCurrentColor]||'#ccc';
+  document.getElementById('deck-count').textContent=unoDeck.length+' left';
+
+  // Direction
+  document.getElementById('uno-direction').textContent=unoDirection===1?'▶ Clockwise':'◀ Counter';
+
+  // Player hand
+  const hand=unoHands[0];
+  const handHTML=hand.map((card,i)=>unoCardHTML(card,i,isPlayerTurn&&canPlay(card))).join('');
+  document.getElementById('uno-player-hand').innerHTML=handHTML;
+
+  // Draw/pass buttons
+  document.getElementById('uno-draw-btn').disabled=!isPlayerTurn||unoDrawnThisTurn;
+  document.getElementById('uno-pass-btn').style.display=(isPlayerTurn&&unoDrawnThisTurn)?'':'none';
+
+  // Uno shout
+  document.getElementById('uno-shout').style.display=hand.length===1?'':'none';
+
+  // Status
+  const statusEl=document.getElementById('uno-status-bar');
+  if(isPlayerTurn){
+    statusEl.textContent=unoDrawnThisTurn?'You drew — pass or play the drawn card':'Your turn! Play a card or draw';
+    statusEl.style.background='var(--teal)';
+  } else {
+    statusEl.textContent=`${UNO_AI_NAMES[unoTurn-1]} is playing...`;
+    statusEl.style.background='#DC2626';
+  }
+}
+
+function addUnoLog(msg){
+  const log=document.getElementById('uno-log');
+  const div=document.createElement('div');
+  div.style.cssText='padding:3px 0;border-bottom:1px solid #F0FDF9;line-height:1.4;';
+  div.innerHTML=msg;
+  log.insertBefore(div,log.firstChild);
+  if(log.children.length>30) log.removeChild(log.lastChild);
+}
+
+function unoPlayCard(idx){
+  if(unoTurn!==0) return;
+  const card=unoHands[0][idx];
+  if(!canPlay(card)) return;
+  unoHands[0].splice(idx,1);
+  unoDiscardPile.push(card);
+  unoCurrentValue=card.value;
+  if(card.color!=='black') unoCurrentColor=card.color;
+  addUnoLog(`<strong>You</strong> played <span style="color:${UNO_COLOR_HEX[card.color]||'#888'};font-weight:700;">${card.value} ${card.color}</span>`);
+  if(unoHands[0].length===0){unoEndGame(0);return;}
+  if(card.color==='black'){
+    document.getElementById('uno-color-picker').classList.add('open');
+    unoPendingWild={card,player:0};
+    return;
+  }
+  unoApplyCardEffect(card,0);
+}
+
+function unoPickColor(color){
+  document.getElementById('uno-color-picker').classList.remove('open');
+  unoCurrentColor=color;
+  addUnoLog(`<strong>You</strong> chose <span style="color:${UNO_COLOR_HEX[color]};font-weight:700;">${color}</span>`);
+  unoApplyCardEffect(unoPendingWild.card,0);
+  unoPendingWild=null;
+}
+
+function unoApplyCardEffect(card,player){
+  unoDrawnThisTurn=false;
+  const next=unoNextPlayer(player);
+  if(card.value==='skip'){
+    addUnoLog(`⊘ ${next===0?'You':UNO_AI_NAMES[next-1]} skipped!`);
+    unoTurn=unoNextPlayer(next);
+  } else if(card.value==='reverse'){
+    unoDirection*=-1;
+    addUnoLog(`↩ Direction reversed!`);
+    unoTurn=unoNumPlayers===2?player:unoNextPlayer(player);
+  } else if(card.value==='draw2'){
+    for(let i=0;i<2;i++){ if(unoDeck.length===0) unoReshuffleDraw(); unoHands[next].push(unoDeck.pop()); }
+    addUnoLog(`+2 💀 ${next===0?'<strong>You</strong> were hit! Drew':UNO_AI_NAMES[next-1]+' drew'} 2 cards!`);
+    if(next===0){ flashStatus('+2 cards — you were hit! 💀', '#EF4444'); }
+    unoTurn=unoNextPlayer(next);
+  } else if(card.value==='wild4'){
+    for(let i=0;i<4;i++){ if(unoDeck.length===0) unoReshuffleDraw(); unoHands[next].push(unoDeck.pop()); }
+    addUnoLog(`+4 💀 ${next===0?'<strong>You</strong> were hit! Drew':UNO_AI_NAMES[next-1]+' drew'} 4 cards!`);
+    if(next===0){ flashStatus('+4 cards — you were hit! 💀', '#EF4444'); }
+    unoTurn=unoNextPlayer(next);
+  } else {
+    unoTurn=next;
+  }
+  renderUnoGame();
+  if(unoTurn!==0) setTimeout(unoAITurn,900);
+}
+
+function unoNextPlayer(from){
+  return((from+unoDirection)+unoNumPlayers)%unoNumPlayers;
+}
+
+function flashStatus(msg, color){
+  const el=document.getElementById('uno-status-bar');
+  if(!el) return;
+  el.textContent=msg;
+  el.style.background=color;
+  setTimeout(()=>renderUnoGame(),2000);
+}
+
+function unoDrawCard(){
+  if(unoTurn!==0||unoDrawnThisTurn) return;
+  if(unoDeck.length===0) unoReshuffleDraw();
+  const card=unoDeck.pop();
+  unoHands[0].push(card);
+  unoDrawnThisTurn=true;
+  addUnoLog(`<strong>You</strong> drew a card`);
+  renderUnoGame();
+}
+
+function unoPass(){
+  if(unoTurn!==0||!unoDrawnThisTurn) return;
+  unoDrawnThisTurn=false;
+  unoTurn=unoNextPlayer(0);
+  addUnoLog(`<strong>You</strong> passed`);
+  renderUnoGame();
+  if(unoTurn!==0) setTimeout(unoAITurn,900);
+}
+
+function unoReshuffleDraw(){
+  const top=unoDiscardPile.pop();
+  unoDeck=[...unoDiscardPile];
+  unoDiscardPile=[top];
+  shuffleDeck(unoDeck);
+  addUnoLog('🔄 Deck reshuffled!');
+  return unoDeck.pop();
+}
+
+function unoAITurn(){
+  if(unoTurn===0) return;
+  const p=unoTurn;
+  const hand=unoHands[p];
+  const playable=hand.filter(c=>canPlay(c));
+  if(playable.length>0){
+    // Pick: prefer action cards, then numbered
+    const pick=playable.find(c=>c.value==='wild4')||playable.find(c=>c.value==='draw2')||playable.find(c=>c.value==='skip')||playable.find(c=>c.value==='reverse')||playable.find(c=>c.value==='wild')||playable[0];
+    const idx=hand.indexOf(pick);
+    hand.splice(idx,1);
+    unoDiscardPile.push(pick);
+    unoCurrentValue=pick.value;
+    if(pick.color!=='black') unoCurrentColor=pick.color;
+    addUnoLog(`${UNO_AI_NAMES[p-1]} played <span style="color:${UNO_COLOR_HEX[pick.color]||'#888'};font-weight:700;">${pick.value} ${pick.color}</span>`);
+    if(hand.length===1) addUnoLog(`${UNO_AI_NAMES[p-1]} <strong style="color:#DC2626;">UNO!</strong>`);
+    if(hand.length===0){unoEndGame(p);return;}
+    if(pick.color==='black'){
+      // AI picks most frequent color in hand
+      const freq={red:0,blue:0,green:0,yellow:0};
+      hand.forEach(c=>{if(freq[c.color]!==undefined)freq[c.color]++;});
+      const chosen=Object.entries(freq).sort((a,b)=>b[1]-a[1])[0][0];
+      unoCurrentColor=chosen;
+      addUnoLog(`${UNO_AI_NAMES[p-1]} chose <span style="color:${UNO_COLOR_HEX[chosen]};font-weight:700;">${chosen}</span>`);
+    }
+    unoApplyCardEffect(pick,p);
+  } else {
+    if(unoDeck.length===0) unoReshuffleDraw();
+    hand.push(unoDeck.pop());
+    addUnoLog(`${UNO_AI_NAMES[p-1]} drew a card`);
+    unoTurn=unoNextPlayer(p);
+    renderUnoGame();
+    if(unoTurn!==0) setTimeout(unoAITurn,900);
+  }
+}
+
+function unoEndGame(winner){
+  const banner=document.getElementById('uno-winner');
+  banner.style.display='flex';
+  document.getElementById('uno-winner-emoji').textContent=winner===0?'🏆':'🤖';
+  document.getElementById('uno-winner-title').textContent=winner===0?'You won!':UNO_AI_NAMES[winner-1]+' wins!';
+  document.getElementById('uno-winner-sub').textContent=winner===0?'You emptied your hand first — Uno champion!':'The AI ran out of cards first. Better luck next time!';
+  // Confetti
+  const canvas=document.getElementById('uno-confetti');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const particles=Array.from({length:100},()=>({x:Math.random()*canvas.width,y:Math.random()*-canvas.height,r:4+Math.random()*6,color:['#EF4444','#3B82F6','#22C55E','#F59E0B','white'][Math.floor(Math.random()*5)],speed:2+Math.random()*4,drift:(Math.random()-0.5)*2,angle:Math.random()*Math.PI*2,spin:(Math.random()-0.5)*0.15}));
+  function drawC(){
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{p.y+=p.speed;p.x+=p.drift;p.angle+=p.spin;if(p.y>canvas.height){p.y=-10;p.x=Math.random()*canvas.width;}ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.fillStyle=p.color;ctx.fillRect(-p.r/2,-p.r*0.4,p.r,p.r*0.5);ctx.restore();});
+    unoConfettiAnim2=requestAnimationFrame(drawC);
+  }
+  drawC();
+}
+</script>
+
+<!-- ══ END UNO GAME ══ -->
+
+<!-- CELEBRATION OVERLAY — global -->
+<div id="celebrate-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(13,148,136,0.97);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;">
+  <canvas id="confetti-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"></canvas>
+  <div style="position:relative;z-index:2;">
+    <div id="celebrate-emoji" style="font-size:5rem;margin-bottom:16px;animation:celebBounce 0.8s cubic-bezier(0.34,1.56,0.64,1) both;"></div>
+    <h1 id="celebrate-title" style="font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(1.8rem,5vw,3rem);color:white;margin-bottom:14px;animation:celebFadeUp 0.6s 0.2s both;"></h1>
+    <p id="celebrate-sub" style="color:var(--teal-light);font-size:1.1rem;max-width:480px;line-height:1.7;margin:0 auto 32px;animation:celebFadeUp 0.6s 0.35s both;"></p>
+    <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:celebFadeUp 0.6s 0.5s both;">
+      <button onclick="closeCelebrate()" style="background:var(--amber);color:var(--ink);font-family:'Sora',sans-serif;font-weight:800;font-size:1rem;padding:14px 28px;border-radius:14px;border:none;cursor:pointer;">🎮 Browse more games</button>
+      <button onclick="closeCelebrate()" style="background:rgba(255,255,255,0.15);color:white;font-family:'Sora',sans-serif;font-weight:700;font-size:1rem;padding:14px 28px;border-radius:14px;border:2px solid rgba(255,255,255,0.4);cursor:pointer;">← Back to tutorial</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
