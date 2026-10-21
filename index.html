@@ -17,10 +17,10 @@
      These settings are safe to publish; the Firestore security rules protect the data.
      ═══════════════════════════════════════════════════════════════════════════ */
   window.GG_FIREBASE_CONFIG = {
-    apiKey: "",
-    authDomain: "",
-    projectId: "",
-    appId: ""
+    apiKey: "AIzaSyDG1iOSUcxWe71s6danOIL68BW0F8l20o8",
+    authDomain: "games-go-30cc2.firebaseapp.com",
+    projectId: "games-go-30cc2",
+    appId: "1:464269395064:web:0a896a37becfcb00f6598d"
   };
   </script>
   <meta name="description" content="Free, animated step-by-step tutorials for Snake &amp; Ladders, Chess and Uno, then play each game against the computer. Beginner friendly, no sign-up." />
@@ -32,7 +32,7 @@
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="GamesGo — Learn games the easy way" />
   <meta name="twitter:description" content="Animated tutorials for Snake &amp; Ladders, Chess and Uno, plus a game against the computer for each." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FFB300'/%3E%3Ctext x='32' y='46' font-size='40' text-anchor='middle'%3E%F0%9F%A6%89%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" id="gg-favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FFB300'/%3E%3Ctext x='32' y='47' font-size='42' text-anchor='middle'%3E🦊%3C/text%3E%3C/svg%3E" />
   <style>
     /* Base reset (the parts of Tailwind's preflight this page relied on, without loading Tailwind) */
     *,::before,::after{border-width:0;border-style:solid;border-color:#e5e7eb;}
@@ -561,6 +561,18 @@
       <span class="badge" style="background:rgba(255,255,255,0.2);color:white;">About GamesGo</span>
       <h2 style="color:white;font-size:1.9rem;margin:16px 0 16px;">Games are better when everyone knows how to play.</h2>
       <p style="color:var(--teal-light);line-height:1.75;font-size:1rem;">GamesGo is a free library of game tutorials — board games, card games, and more — for beginners. No fluff — just clear rules, visual guides, and tips that get you playing in minutes. More games added regularly.</p>
+    </div>
+  </section>
+
+  <section class="give" aria-labelledby="give-title">
+    <div class="give-card">
+      <div class="give-ico" aria-hidden="true">🌜</div>
+      <div class="give-text">
+        <h2 id="give-title">Help people who need it</h2>
+        <p>GamesGo is free. If your family would like to give something back, you can donate to the <b>Emirates Red Crescent</b>, which helps families with food, medicine and shelter in the UAE and around the world.</p>
+        <p class="give-note">GamesGo is not part of the Red Crescent and never collects money. The button opens the official Emirates Red Crescent donation page, where a grown-up picks a cause and pays safely. <b>Kids: please ask a grown-up first.</b></p>
+      </div>
+      <button class="btn-amber give-btn" type="button" onclick="ggGive()">💖 Donate with a grown-up</button>
     </div>
   </section>
 
@@ -1758,6 +1770,8 @@
   function ggRouteFromHash() {
     const h = (location.hash || '').slice(1);
     const [id, sub] = h.split('/');
+    const inv = h.match(/^friends\?add=([A-Z]{3}-[A-Z0-9]{3})$/);
+    if (inv) { window.GG_PENDING_FRIEND = inv[1]; showPage('profile', false, true); return; }
     if (GG_PAGES.includes(id)) showPage(id, sub === 'play' ? true : (sub === 'puzzles' ? 'puzzles' : false), true);
     else showPage('home', false, true);
   }
@@ -2471,6 +2485,7 @@
             gHighlight = {sq:current, color:'rgba(34,197,94,0.3)'};
             addLog(`🪜 ${logName} hit a ladder! ${current} → ${dest}`);
             sfx('ladder');
+            if(window.GG&&GG.react)GG.react(player===0?'happy':'shock',player===0?'Up the ladder!':'The AI is climbing!');
             setTimeout(() => {
               if(gen !== slGen) return;
               gMoveAnim = {player, from:current, to:dest, t:0, isLadder:true, isSnake:false};
@@ -2489,6 +2504,7 @@
             gHighlight = {sq:current, color:'rgba(220,38,38,0.3)'};
             addLog(`🐍 ${logName} hit a snake! ${current} → ${dest}`);
             sfx('snake');
+            if(window.GG&&GG.react)GG.react(player===0?'sad':'happy',player===0?'Oh no, a snake!':'Ha! AI hit a snake!');
             if(player===0&&window.GG) GG.snakeBite();
             setTimeout(() => {
               if(gen !== slGen) return;
@@ -2565,7 +2581,7 @@
     updatePlayerCards();
     const gen=slGen;
     if(gTurn===1) setTimeout(()=>{ if(gen===slGen) ggWhenAwake(()=>{ if(gen===slGen) aiTurn(); }); },900);
-    else setRollBtn(true);
+    else { gRolling=false; setRollBtn(true); }
   }
 
   function playerRoll(){
@@ -2583,7 +2599,7 @@
       if(shakes>=6){
         clearInterval(shakeInterval);
         const face=rollDice(); gDiceFace=face; drawDiceFace(face);
-        gRolling=false;
+        // stay locked until the move is finished and it's your turn again
         setTimeout(()=>{ if(gen===slGen) movePlayer(0,face); },200);
       }
     },55);
@@ -2958,7 +2974,7 @@ function unoCloseCatch(){
   const p=unoCatch.player; unoCatch=null;
   if(p===0){
     // Your opponents notice most of the time
-    if(Math.random()<0.75){ const got=unoGive(0,2); addUnoLog(`🚨 You were caught not calling Uno! You draw ${got}`); sfx('hit'); flashStatus('Caught! You forgot to call UNO: +2','#EF4444'); }
+    if(Math.random()<0.75){ const got=unoGive(0,2); addUnoLog(`🚨 You were caught not calling Uno! You draw ${got}`); sfx('hit'); if(window.GG&&GG.react)GG.react('sad','Forgot to say Uno!'); flashStatus('Caught! You forgot to call UNO: +2','#EF4444'); }
   }
 }
 function unoCallUno(){
@@ -2970,7 +2986,7 @@ function unoCatchAI(){
   if(!unoCatch||unoCatch.player===0) return;
   const p=unoCatch.player; unoCatch=null;
   const got=unoGive(p,2);
-  addUnoLog(`🚨 You caught ${UNO_AI_NAMES[p-1]}! They draw ${got}`); sfx('hit');
+  addUnoLog(`🚨 You caught ${UNO_AI_NAMES[p-1]}! They draw ${got}`); sfx('hit'); if(window.GG&&GG.react)GG.react('happy','Caught you!');
   renderUnoGame();
 }
 function unoPlayCard(idx){
@@ -3004,6 +3020,10 @@ function unoPickColor(color){
 function unoApplyCardEffect(card,player){
   unoDrawnThisTurn=false; unoDrawnCard=null;
   const next=unoNextPlayer(player);
+  if(window.GG&&GG.react){const act=['skip','reverse','draw2','wild4'].includes(card.value);
+    if(player===0&&act)GG.react(card.value==='wild4'?'wow':'happy',card.value==='draw2'?'Take two!':card.value==='wild4'?'Plus four!':card.value==='skip'?'Skipped you!':'Switch!');
+    else if(next===0&&(card.value==='draw2'||card.value==='wild4'))GG.react('sad',card.value==='draw2'?'Two cards…':'Four cards?!');
+    else if(next===0&&card.value==='skip'&&unoNumPlayers>1)GG.react('sad','I got skipped!');}
   if(card.value==='skip'){
     addUnoLog(`⊘ ${next===0?'You were':UNO_AI_NAMES[next-1]+' was'} skipped!`);
     unoTurn=unoNextPlayer(next);
@@ -3282,6 +3302,8 @@ function unoEndGame(winner){
   .pz-track{height:10px;background:var(--teal-pale);border-radius:999px;overflow:hidden;}
   .pz-bar{height:100%;background:linear-gradient(90deg,#FFB300,#E35100);border-radius:999px;transition:width 0.4s;}
   .pz-list{display:flex;flex-wrap:wrap;gap:6px;}
+  .pz-daily-note{font-size:0.8rem;color:var(--muted);margin:2px 0 8px;line-height:1.45;}
+  .pz-daily-card{border-color:var(--amber) !important;}
   .pz-chip{min-width:40px;padding:6px 10px;border-radius:999px;border:2px solid var(--border);background:white;font-family:'Fredoka',sans-serif;font-weight:600;font-size:0.8rem;color:var(--ink);}
   .pz-chip.solved{background:#DCFCE7;border-color:#86EFAC;color:#15803D;}
   .pz-chip.active{border-color:var(--teal);box-shadow:0 3px 0 var(--amber);}
@@ -3459,6 +3481,13 @@ function unoEndGame(winner){
         <div class="pz-track"><div id="pz-bar" class="pz-bar"></div></div>
         <div id="pz-progress" style="font-size:0.8rem;color:var(--muted);margin:6px 0 10px;font-weight:700;"></div>
         <div id="pz-list" class="pz-list"></div>
+      </div>
+      <div class="ch-panel-card pz-daily-card">
+        <h4>📅 Today's puzzles</h4>
+        <p class="pz-daily-note">3 new puzzles every day: two Mate in 1 and a harder ★ Mate in 2. +15 🪙 each.</p>
+        <div id="pz-daily" class="pz-list"></div>
+        <div id="pz-daily-count" class="pz-daily-note" style="font-weight:700;margin-top:6px;"></div>
+        <button class="ch-action-btn" style="background:white;border:2px solid var(--border);color:var(--ink);width:100%;margin-top:10px;" onclick="pzPractice()">🎲 Practice puzzle (endless, just for fun)</button>
       </div>
     </div>
   </div>
@@ -4179,6 +4208,7 @@ function unoEndGame(winner){
     chLastFrom=from;chLastTo=to;chSel=null;chLegal=[];chHint=null;
     chRecordPos();chCheckAutoEnd();if(chResult)chShowResult();
     chAddLog('You',move,false);chAfterChange();chMoveSound(move);
+    if(!chResult){if(move.captured)if(window.GG&&GG.react)GG.react(move.captured==='q'?'wow':'happy',move.captured==='q'?'I got the queen!':'Got one!');else if(move.flags.indexOf('p')>=0)if(window.GG&&GG.react)GG.react('wow','New queen!');else if(chGame.in_check())if(window.GG&&GG.react)GG.react('happy','Check!');}
     chScheduleAI();
   }
   // Starts the AI's move if it is the AI's turn. Called after your move, on new game, and when you come back to the page.
@@ -4198,6 +4228,7 @@ function unoEndGame(winner){
     chLastFrom=move.from;chLastTo=move.to;
     chRecordPos();chCheckAutoEnd();if(chResult)chShowResult();
     chAddLog('AI',move,true);chAfterChange();chMoveSound(move);
+    if(!chResult){if(move.captured)if(window.GG&&GG.react)GG.react(move.captured==='q'?'shock':'sad',move.captured==='q'?'Not my queen!':'Aww, they took one!');else if(chGame.in_check())if(window.GG&&GG.react)GG.react('shock','Check! Protect the king!');}
   }
 
   // ── Panel ──
@@ -4464,8 +4495,107 @@ function unoEndGame(winner){
     {title:"Philidor's legacy",theme:'Mate in 2',goal:'mate',n:2,fen:'5r1k/6pp/7N/3Q4/8/8/8/6K1 w - - 0 1',hint:'Sacrifice the queen on g8!',explain:'Qg8+! Rxg8 forced, then Nf7# — a famous smothered mate.'},
     {title:'Royal fork',theme:'Win material',goal:'win',n:2,fen:'3q3k/6pp/8/4N3/8/8/6PP/6K1 w - - 0 1',key:['Nf7+'],hint:'Find a knight check that also attacks the queen.',explain:'Nf7+ forks king and queen. After the king moves, Nxd8 wins the queen.'},
     {title:'Skewer',theme:'Win material',goal:'win',n:2,fen:'4q3/8/8/4k3/8/8/8/R5K1 w - - 0 1',key:['Re1+'],hint:'King and queen are on the same file.',explain:'Re1+ is a skewer: the king must step aside, then Rxe8 wins the queen behind it.'},
-    {title:'Pawn fork',theme:'Win material',goal:'win',n:2,fen:'4k3/pp3ppp/2n1b3/8/3P4/2N5/PP3PPP/4K3 w - - 0 1',key:['d5'],hint:'A humble pawn can attack two pieces at once.',explain:'d5! attacks both the knight and the bishop (the Nc3 protects the pawn), so White wins a piece.'}
+    {title:'Pawn fork',theme:'Win material',goal:'win',n:2,fen:'4k3/pp3ppp/2n1b3/8/3P4/2N5/PP3PPP/4K3 w - - 0 1',key:['d5'],hint:'A humble pawn can attack two pieces at once.',explain:'d5! attacks both the knight and the bishop (the Nc3 protects the pawn), so White wins a piece.'},
+    {title:"Corner rook",theme:"Mate in 1",goal:"mate",n:1,fen:"k7/8/1K6/8/8/8/8/7R w - - 0 1",hint:"Your king already guards a7 and b7.",explain:"Rh8# \u2014 the rook checks along the 8th rank and your king covers every escape square."},
+    {title:"Rook and king",theme:"Mate in 1",goal:"mate",n:1,fen:"7k/8/6K1/8/8/8/8/R7 w - - 0 1",hint:"The king can't go to g7 or h7. What about the top row?",explain:"Ra8# \u2014 your king covers g7 and h7, and the rook covers the whole 8th rank."},
+    {title:"Bishop's helper",theme:"Mate in 1",goal:"mate",n:1,fen:"6k1/5p1p/5Qp1/8/8/8/1B6/6K1 w - - 0 1",hint:"When the queen moves, the bishop on b2 wakes up.",explain:"Qg7# \u2014 the bishop on b2 protects the queen, so the king can't take her."},
+    {title:"Black's queen",theme:"Mate in 1",goal:"mate",n:1,fen:"6k1/8/8/8/8/1q6/5PPP/6K1 b - - 0 1",hint:"White's king is stuck behind its own pawns.",explain:"Qb1# (or Qd1#) \u2014 another back-rank mate, this time by Black."},
+    {title:"Arabian mate",theme:"Mate in 1",goal:"mate",n:1,fen:"7k/R7/5N2/8/8/8/8/6K1 w - - 0 1",hint:"The knight guards h7 and g8.",explain:"Rh7# \u2014 the knight protects the rook and covers g8. This pattern is over 1,000 years old!"},
+    {title:"New queen",theme:"Mate in 1",goal:"mate",n:1,fen:"7k/5P1p/8/8/8/8/8/K5R1 w - - 0 1",hint:"A pawn on the 7th row is about to become something special.",explain:"f8=Q# (or Rg8#) \u2014 the new queen checks along the 8th rank and the rook covers g7."},
+    {title:"Black's rook",theme:"Mate in 1",goal:"mate",n:1,fen:"3r2k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1",hint:"Look at White's bottom row.",explain:"Rd1# \u2014 White's own pawns trap the king."},
+    {title:"Bishop guard",theme:"Mate in 1",goal:"mate",n:1,fen:"6k1/5p1p/6pB/8/8/8/8/3R2K1 w - - 0 1",hint:"The bishop already covers f8 and g7.",explain:"Rd8# \u2014 the bishop guards f8 and g7, and the rook covers the rest of the 8th rank."},
+    {title:"Queen's corridor",theme:"Mate in 1",goal:"mate",n:1,fen:"1k6/ppp5/8/8/8/8/5PPP/4Q1K1 w - - 0 1",hint:"The black king's pawns are a wall.",explain:"Qe8# \u2014 the king can't escape forward because of its own pawns."},
+    {title:"Knight in the corner",theme:"Mate in 1",goal:"mate",n:1,fen:"kr6/pp6/8/3N4/8/8/8/1K6 w - - 0 1",hint:"The king has no room at all. Which piece can jump in?",explain:"Nc7# \u2014 a smothered mate in the corner: the king is trapped by its own rook and pawns."},
+    {title:"Fool's mate",theme:"Mate in 1",goal:"mate",n:1,fen:"rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 2",hint:"White has opened the diagonal next to the king. You are Black.",explain:"Qh4# \u2014 the fastest checkmate possible in chess, only two moves in! It shows why you shouldn't weaken your king early."},
+    {title:"Epaulette mate",theme:"Mate in 1",goal:"mate",n:1,fen:"3rkr2/8/8/8/8/8/Q7/6K1 w - - 0 1",hint:"The black rooks sit on the king's shoulders like epaulettes.",explain:"Qe6# \u2014 the king's own rooks block d8 and f8, and the queen covers d7, e7 and f7."},
+    {title:"Black corner rook",theme:"Mate in 1",goal:"mate",n:1,fen:"7r/8/8/8/8/1k6/8/K7 b - - 0 1",hint:"Your king already guards a2 and b2.",explain:"Rh1# \u2014 the same corner mate, played by Black."},
+    {title:"Black's Arabian",theme:"Mate in 1",goal:"mate",n:1,fen:"6k1/8/8/8/8/5n2/r7/7K b - - 0 1",hint:"Your knight guards h2 and g1.",explain:"Rh2# \u2014 the knight protects the rook, a pattern players have used for over 1,000 years."},
+    {title:"Black's smother",theme:"Mate in 1",goal:"mate",n:1,fen:"1k6/8/8/8/3n4/8/PP6/KR6 b - - 0 1",hint:"White's king is boxed in by its own pieces.",explain:"Nc2# \u2014 a smothered mate: the king can't move because its own rook and pawns are in the way."},
+    {title:"Knight fork",theme:"Win material",goal:"win",n:2,fen:"r3k3/8/8/1N6/8/8/8/4K3 w - - 0 1",key:["Nc7+"],hint:"A knight check that also attacks something big.",explain:"Nc7+ forks the king and the rook. After the king moves, Nxa8 wins the rook."},
+    {title:"Bishop skewer",theme:"Win material",goal:"win",n:2,fen:"7q/8/8/4k3/8/8/3B4/4K3 w - - 0 1",key:["Bc3+"],hint:"The king and queen are on the same diagonal.",explain:"Bc3+ skewers the king to the queen: the king must move, then Bxh8 wins the queen."},
+    {title:"Queen fork",theme:"Win material",goal:"win",n:2,fen:"r3k3/8/8/8/8/8/8/1Q5K w - - 0 1",key:["Qe4+"],hint:"Find a queen check that also hits the rook on a8.",explain:"Qe4+ checks the king and attacks the rook along the long diagonal. After the king moves, Qxa8 wins it."},
+    {title:"Discovered attack",theme:"Win material",goal:"win",n:2,fen:"q3k3/8/8/8/8/8/4B3/4R1K1 w - - 0 1",key:["Bf3+"],hint:"The bishop is blocking your rook. Move it with a bonus!",explain:"Bf3+ is a discovered check: the rook now checks the king, and the bishop attacks the queen. Black must deal with check, then Bxa8 wins the queen."},
+    {title:"Family fork",theme:"Win material",goal:"win",n:2,fen:"4k3/3q4/8/3N4/8/8/8/4K3 w - - 0 1",key:["Nf6+"],hint:"Find a knight jump that checks the king and hits the queen.",explain:"Nf6+ forks the king and queen. After the king moves, Nxd7 wins the queen."},
+    {title:"Rook skewer",theme:"Win material",goal:"win",n:2,fen:"8/8/8/8/q3k3/8/8/6KR w - - 0 1",key:["Rh4+"],hint:"The king and queen are on the same row.",explain:"Rh4+ skewers the king to the queen: the king must step off the row, then Rxa4 wins the queen."},
+    {title:"Make a queen",theme:"Promotion",goal:"win",n:1,fen:"8/1P6/8/8/8/8/k7/7K w - - 0 1",key:["b8=Q"],hint:"Your pawn is one step from the end of the board.",explain:"b8=Q \u2014 when a pawn reaches the last row it becomes a queen (or any piece you like)."},
+    {title:"Queen and king box",theme:"Mate in 2",goal:"mate",n:2,fen:"7k/8/5K2/8/8/8/8/Q7 w - - 0 1",hint:"Take away the king's escape squares first, but don't leave Black with no moves at all!",explain:"A quiet move like Kf7 or Qg1 traps the king, then the queen mates next move. Careful: some moves give stalemate, which is only a draw."},
+    {title:"Rook ladder",theme:"Mate in 2",goal:"mate",n:2,fen:"k7/8/8/8/8/8/6R1/4K2R w - - 0 1",hint:"Use one rook to fence the king in.",explain:"Rg7! fences the king on the 8th rank, then Rh8# finishes. Two rooks work like a ladder."},
+    {title:"Opera mate",theme:"Mate in 2",goal:"mate",n:2,fen:"4kb1r/p2n1ppp/4q3/4p1B1/4P3/1Q6/PPP2PPP/2KR4 w - - 1 17",hint:"Give away your queen so the rook can strike!",explain:"Qb8+!! Nxb8 Rd8# \u2014 Paul Morphy played this famous combination at the Paris opera in 1858."},
+    {title:"Queen on the edge",theme:"Mate in 2",goal:"mate",n:2,fen:"k7/8/2K5/8/8/8/8/4Q3 w - - 0 1",hint:"Bring the king next to the corner first. Watch out for stalemate!",explain:"Bring your king to b6 first, then the queen gives mate on the 8th rank. Watch out for stalemate!"},
+    {title:"Rook roller, Black",theme:"Mate in 2",goal:"mate",n:2,fen:"1r4k1/8/8/8/8/r7/8/4K3 b - - 0 1",hint:"Fence the king in with one rook, then check with the other.",explain:"One rook cuts the king off on the 2nd rank, then the other gives mate on the 1st rank."}
   ];
+  // ══════════ DAILY + PRACTICE PUZZLES (made by the computer, checked with chess.js) ══════════
+  function pzRng(seed){var a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;var t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
+  function pzHash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+  function pzMates(g,n){ // first moves that force mate in n
+    var out=[],ms=g.moves({verbose:true});
+    for(var i=0;i<ms.length;i++){g.move(ms[i]);var ok;
+      if(g.in_checkmate())ok=true;else if(n===1)ok=false;else{var rs=g.moves({verbose:true});ok=rs.length>0&&rs.every(function(r){g.move(r);var x=pzMateIn(g,n-1);g.undo();return x;});}
+      g.undo();if(ok)out.push(ms[i].san);}
+    return out;
+  }
+  function pzMake(seed,n){
+    var R=pzRng(seed),pick=function(a){return a[Math.floor(R()*a.length)];};
+    var SETS=n===1?[['q'],['r'],['q','n'],['r','r'],['r','b'],['r','n'],['q','b'],['q','r']]:[['q'],['r','r'],['q','r'],['r','b'],['q','n'],['r','n']];
+    for(var tries=0;tries<6000;tries++){
+      var atk=R()<0.75?'w':'b',def=atk==='w'?'b':'w',B={};
+      var up=function(c){return c==='w'?1:-1;};
+      var put=function(f,r,pc){if(f<0||f>7||r<0||r>7)return false;var k=f+','+r;if(B[k])return false;B[k]=pc;return true;};
+      var home=def==='w'?0:7,kf,kr;
+      if(R()<0.7){kf=Math.floor(R()*8);kr=home;}else{var e=Math.floor(R()*4),x=Math.floor(R()*8);kf=e===0?0:e===1?7:x;kr=e===2?0:e===3?7:(e<2?Math.floor(R()*8):(e===2?0:7));}
+      put(kf,kr,def==='w'?'K':'k');
+      if(R()<0.65){var fr=kr-up(def);if(fr>0&&fr<7)for(var df=-1;df<=1;df++)if(R()<0.7)put(kf+df,fr,def==='w'?'P':'p');}
+      if(R()<0.35){var ex=pick(['r','b','n','p']);var ef=Math.floor(R()*8),er=Math.floor(R()*8);if(!(ex==='p'&&(er===0||er===7)))put(ef,er,def==='w'?ex.toUpperCase():ex);}
+      var af,ar,guard=0;do{af=Math.floor(R()*8);ar=Math.floor(R()*8);guard++;}while((Math.max(Math.abs(af-kf),Math.abs(ar-kr))<2||B[af+','+ar])&&guard<50);
+      if(!put(af,ar,atk==='w'?'K':'k'))continue;
+      var set=pick(SETS),okp=true;
+      for(var s=0;s<set.length;s++){var placed=false;for(var t=0;t<30&&!placed;t++)placed=put(Math.floor(R()*8),Math.floor(R()*8),atk==='w'?set[s].toUpperCase():set[s]);if(!placed)okp=false;}
+      if(!okp)continue;
+      var rows=[];for(var r=7;r>=0;r--){var row='',em=0;for(var f=0;f<8;f++){var pc=B[f+','+r];if(pc){if(em){row+=em;em=0;}row+=pc;}else em++;}if(em)row+=em;rows.push(row);}
+      var board=rows.join('/'),fen=board+' '+atk+' - - 0 1';
+      var chk=new Chess();if(!chk.load(board+' '+def+' - - 0 1')||chk.in_check())continue;   // defender must not already be in check
+      var g=new Chess();if(!g.load(fen)||g.in_check()||g.moves().length===0)continue;
+      var sol;
+      if(n===1){sol=pzMates(g,1);if(sol.length<1||sol.length>2)continue;}
+      else{if(pzMates(g,1).length)continue;sol=pzMates(g,2);if(sol.length<1||sol.length>3)continue;}
+      return {fen:fen,sol:sol};
+    }
+    return null;
+  }
+  var PZ_FIXED=PUZZLES.length,pzDailyDay='',pzDailyMaking=false;
+  function pzToday(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function pzDailyDone(){var P=window.GG&&GG.profile&&GG.profile();return P&&P.dailyPz&&P.dailyPz.day===pzToday()?P.dailyPz.done:[];}
+  function pzEntry(m,n,title,extra){
+    var side=m.fen.split(' ')[1]==='w'?'White':'Black';
+    return Object.assign({title:title,theme:'Mate in '+n,goal:'mate',n:n,fen:m.fen,
+      hint:n===1?'Look for a check that the king can\'t escape from.':'First find a move that traps the king, then mate it next move.',
+      explain:n===1?'Checkmate with '+m.sol.join(' or ')+'!':'Start with '+m.sol.join(' or ')+', then checkmate on the next move.'},extra);
+  }
+  function pzMakeDaily(){
+    var day=pzToday();if(pzDailyDay===day)return true;
+    var plan=[1,1,2];
+    for(var k=0;k<3;k++){var m=pzMake(pzHash('gamesgo-daily|'+day+'|'+k),plan[k]);if(!m)return false;PUZZLES[PZ_FIXED+k]=pzEntry(m,plan[k],'Daily puzzle '+(k+1),{daily:k,day:day});}
+    pzDailyDay=day;return true;
+  }
+  function pzRenderDaily(){
+    var el=document.getElementById('pz-daily');if(!el)return;
+    if(pzDailyDay!==pzToday()){
+      el.innerHTML='<span class="pz-daily-note">Making today\'s puzzles…</span>';
+      if(!pzDailyMaking){pzDailyMaking=true;setTimeout(function(){pzMakeDaily();pzDailyMaking=false;pzRenderDaily();},30);}
+      return;
+    }
+    var done=pzDailyDone();el.innerHTML='';
+    [0,1,2].forEach(function(k){var i=PZ_FIXED+k,ok=done.indexOf(k)>=0,b=document.createElement('button');
+      b.className='pz-chip pz-day-chip'+(i===pzIdx?' active':'')+(ok?' solved':'');b.textContent=(ok?'✓ ':'')+'Day '+(k+1)+(k===2?' ★':'');
+      b.title=PUZZLES[i].theme;b.setAttribute('aria-label','Daily puzzle '+(k+1)+', '+PUZZLES[i].theme+(ok?', solved':''));b.onclick=function(){pzOpen(i);};el.appendChild(b);});
+    var n=document.getElementById('pz-daily-count');if(n)n.textContent=done.length+' of 3 done today'+(done.length===3?' 🎉 Come back tomorrow!':'');
+  }
+  window.pzPractice=function(){
+    if(!chLibOk)return;var n=Math.random()<0.7?1:2;
+    var m=pzMake((Date.now()^Math.floor(Math.random()*4294967296))>>>0,n);if(!m)return;
+    PUZZLES[PZ_FIXED+3]=pzEntry(m,n,'Practice puzzle',{practice:true});
+    pzOpen(PZ_FIXED+3);
+  };
   var pzIdx=0,pzGame=null,pzStep=0,pzSel=null,pzLegal=[],pzBusy=false,pzDone=false,pzShown=false,pzFlip=false,pzLast=null,pzBad=null,pzHintSq=null;
   var pzSolved=(function(){try{return JSON.parse(localStorage.getItem('gg-puzzles')||'[]');}catch(e){return [];}})();
   function pzSave(){try{localStorage.setItem('gg-puzzles',JSON.stringify(pzSolved));}catch(e){}}
@@ -4480,10 +4610,11 @@ function unoEndGame(winner){
   }
   window.pzOpen=function(i){
     if(!chLibOk){document.getElementById('pz-board').innerHTML='<div class="ch-lib-error">The chess engine couldn\'t be loaded. Check your connection and reload.</div>';return;}
-    pzIdx=(i+PUZZLES.length)%PUZZLES.length;var p=PUZZLES[pzIdx];
+    if(i>=PZ_FIXED&&!PUZZLES[i]){pzMakeDaily();if(!PUZZLES[i])i=0;}
+    pzIdx=i>=PZ_FIXED?i:(i+PZ_FIXED)%PZ_FIXED;var p=PUZZLES[pzIdx];
     pzGame=new Chess(p.fen);pzStep=0;pzSel=null;pzLegal=[];pzBusy=false;pzDone=false;pzShown=false;pzLast=null;pzBad=null;pzHintSq=null;
     pzFlip=pzGame.turn()==='b';
-    document.getElementById('pz-title').textContent=(pzIdx+1)+'. '+p.title;
+    document.getElementById('pz-title').textContent=pzIdx>=PZ_FIXED?(p.daily!==undefined?'📅 ':'🎲 ')+p.title:(pzIdx+1)+'. '+p.title;
     document.getElementById('pz-theme').textContent=p.theme;
     var side=pzGame.turn()==='w'?'White':'Black';
     document.getElementById('pz-task').textContent=side+' to move. '+(p.goal==='mate'?'Find checkmate in '+p.n+(p.n===1?' move.':' moves.'):'Find the move that wins material.');
@@ -4493,9 +4624,10 @@ function unoEndGame(winner){
   };
   function pzRenderList(){
     var el=document.getElementById('pz-list');el.innerHTML='';
-    PUZZLES.forEach(function(p,i){var b=document.createElement('button');b.className='pz-chip'+(i===pzIdx?' active':'')+(pzSolved.indexOf(i)>=0?' solved':'');b.textContent=(pzSolved.indexOf(i)>=0?'✓ ':'')+(i+1);b.title=p.title+' ('+p.theme+')';b.setAttribute('aria-label','Puzzle '+(i+1)+': '+p.title+(pzSolved.indexOf(i)>=0?', solved':''));b.onclick=function(){pzOpen(i);};el.appendChild(b);});
-    document.getElementById('pz-progress').textContent=pzSolved.length+' of '+PUZZLES.length+' solved';
-    document.getElementById('pz-bar').style.width=(100*pzSolved.length/PUZZLES.length)+'%';
+    PUZZLES.slice(0,PZ_FIXED).forEach(function(p,i){var b=document.createElement('button');b.className='pz-chip'+(i===pzIdx?' active':'')+(pzSolved.indexOf(i)>=0?' solved':'');b.textContent=(pzSolved.indexOf(i)>=0?'✓ ':'')+(i+1);b.title=p.title+' ('+p.theme+')';b.setAttribute('aria-label','Puzzle '+(i+1)+': '+p.title+(pzSolved.indexOf(i)>=0?', solved':''));b.onclick=function(){pzOpen(i);};el.appendChild(b);});
+    document.getElementById('pz-progress').textContent=pzSolved.filter(function(x){return x<PZ_FIXED;}).length+' of '+PZ_FIXED+' solved';
+    document.getElementById('pz-bar').style.width=(100*pzSolved.filter(function(x){return x<PZ_FIXED;}).length/PZ_FIXED)+'%';
+    pzRenderDaily();
   }
   function pzRender(){
     var el=document.getElementById('pz-board');el.innerHTML='';
@@ -4544,7 +4676,7 @@ function unoEndGame(winner){
     }
     pzRender();
     if(!good){
-      pzBad=m.to;pzBusy=true;sfx('lose');
+      pzBad=m.to;pzBusy=true;sfx('lose');if(window.GG&&GG.react)GG.react('sad','Not quite…');
       pzMsg('<b>Not quite.</b> '+m.san+' isn\'t the answer — have another go.','bad');pzRender();
       setTimeout(function(){pzGame.undo();pzBad=null;pzLast=null;pzBusy=false;pzRender();},800);
       return;
@@ -4561,10 +4693,15 @@ function unoEndGame(winner){
   }
   function pzFinish(byYou){
     var p=PUZZLES[pzIdx];pzDone=true;
-    if(byYou&&!pzShown&&pzSolved.indexOf(pzIdx)<0){pzSolved.push(pzIdx);pzSave();}
-    if(byYou&&!pzShown&&window.GG)GG.puzzleSolved(pzIdx,false);
+    if(pzIdx<PZ_FIXED){
+      if(byYou&&!pzShown&&pzSolved.indexOf(pzIdx)<0){pzSolved.push(pzIdx);pzSave();}
+      if(byYou&&!pzShown&&window.GG)GG.puzzleSolved(pzIdx,false);
+    }else if(p.daily!==undefined){
+      if(byYou&&!pzShown&&window.GG&&GG.dailyPuzzle)GG.dailyPuzzle(p.day,p.daily);
+    }
     if(byYou)sfx('win');
-    pzMsg((byYou&&!pzShown?'<b>🎉 Solved!</b> ':'<b>Solution:</b> ')+p.explain,byYou&&!pzShown?'good':'');
+    if(byYou&&!pzShown)if(window.GG&&GG.react)GG.react('happy','Solved it!');
+    pzMsg((byYou&&!pzShown?'<b>🎉 Solved!</b> ':'<b>Solution:</b> ')+p.explain+(p.practice&&byYou&&!pzShown?' Practice puzzles are just for fun, so they don\'t give coins.':''),byYou&&!pzShown?'good':'');
     document.getElementById('pz-next').style.display='';
     pzRender();pzRenderList();
   }
@@ -4586,7 +4723,9 @@ function unoEndGame(winner){
     var mv=pzBestFor();if(!mv)return;
     pzShown=true;pzTry(mv);
   };
-  window.pzNext=function(){var nxt=-1;for(var k=1;k<=PUZZLES.length;k++){var j=(pzIdx+k)%PUZZLES.length;if(pzSolved.indexOf(j)<0){nxt=j;break;}}pzOpen(nxt<0?pzIdx+1:nxt);};
+  window.pzNext=function(){
+    if(pzIdx>=PZ_FIXED){var done=pzDailyDone();for(var d=0;d<3;d++)if(done.indexOf(d)<0&&PZ_FIXED+d!==pzIdx){pzOpen(PZ_FIXED+d);return;}pzPractice();return;}
+    var nxt=-1;for(var k=1;k<=PZ_FIXED;k++){var j=(pzIdx+k)%PZ_FIXED;if(pzSolved.indexOf(j)<0){nxt=j;break;}}pzOpen(nxt<0?pzIdx+1:nxt);};
   window.pzReset=function(){pzOpen(pzIdx);};
   window.chSetCoach=function(on,btn){chCoachOn=on;btn.parentNode.querySelectorAll('.ch-opt').forEach(function(b){b.classList.remove('active');b.setAttribute('aria-pressed','false');});btn.classList.add('active');btn.setAttribute('aria-pressed','true');sfx('click');};
 
@@ -5060,6 +5199,7 @@ function nmPlay(p,card,done){
     else{nmCatch={player:p};if(p!==0)nmLog(`${NM_AI[p-1]} is down to one card and <strong>didn't call UNO</strong>. Catch them!`);}
   }
   if(p===0)nmCalled=false;
+  if(p===0&&window.GG&&GG.react&&hand.length>0){const v=card.v;if(NM_DRAW[v])GG.react(NM_DRAW[v]>=6?'wow':'happy','+'+NM_DRAW[v]+'!');else if(['skip','skipall','reverse','discardall','roulette'].includes(v))GG.react('happy',v==='skipall'?'Skip everyone!':v==='discardall'?'Bye bye cards!':v==='roulette'?'Spin it!':'Gotcha!');}
   if(hand.length===0){nmEnd(p,'empty');return;}
   nmEffect(p,card);
 }
@@ -5119,6 +5259,7 @@ function nmRoulette(p){
   const run=c=>{
     nmColor=c;let flipped=0,hit=false;
     while(true){const card=nmCard();if(!card)break;nmHands[victim].push(card);flipped++;if(card.c===c){hit=true;break;}}
+    if(victim===0)if(window.GG&&GG.react)GG.react(flipped>=4?'shock':'sad','Flipped '+flipped+'!');
     nmLog(`🎰 ${nmName(victim)} chose <span style="color:${NM_HEX[c]};font-weight:700;">${c}</span> and flipped <strong>${flipped}</strong> card${flipped===1?'':'s'}${hit?'':' (the pile ran out)'}`);
     sfx('hit');
     if(nmMercy(victim)&&nmOver)return;
@@ -5137,12 +5278,13 @@ function nmAdvance(){
 }
 function nmCloseCatch(){
   if(!nmCatch)return;const p=nmCatch.player;nmCatch=null;
-  if(p===0&&!nmOut[0]&&Math.random()<0.75){const got=nmGive(0,2);nmLog(`🚨 You were caught not calling UNO! You draw ${got}`);sfx('hit');}
+  if(p===0&&!nmOut[0]&&Math.random()<0.75){const got=nmGive(0,2);nmLog(`🚨 You were caught not calling UNO! You draw ${got}`);sfx('hit');if(window.GG&&GG.react)GG.react('sad','Forgot to say Uno!');}
 }
 function nmTake(p){ // can't / won't stack: take the whole stack, lose the turn
   const n=nmPending;nmPending=0;nmPendingMin=0;
   const got=nmGive(p,n);
   nmLog(`💥 ${nmName(p)} ${p===0?'take':'takes'} <strong>${got}</strong> card${got===1?'':'s'} and ${p===0?'lose':'loses'} the turn`);sfx('hit');
+  if(p===0)if(window.GG&&GG.react)GG.react(got>=6?'shock':'sad','+'+got+' cards…');
   if(nmOver)return;
   nmTurn=nmNext(p);nmAdvance();
 }
@@ -5217,7 +5359,7 @@ function nmCallUno(){
   if(nmCatch&&nmCatch.player===0){nmCatch=null;nmLog('<strong>You</strong> called <strong style="color:#DC2626;">UNO!</strong> just in time');sfx('uno');nmRender();return;}
   if(nmTurn===0&&nmHands[0].length===2){nmCalled=true;nmLog('<strong>You</strong> are calling <strong style="color:#DC2626;">UNO!</strong>');sfx('uno');nmRender();}
 }
-function nmCatchAI(){if(!nmCatch||nmCatch.player===0)return;const p=nmCatch.player;nmCatch=null;const got=nmGive(p,2);nmLog(`🚨 You caught ${NM_AI[p-1]}! They draw ${got}`);sfx('hit');nmRender();}
+function nmCatchAI(){if(!nmCatch||nmCatch.player===0)return;const p=nmCatch.player;nmCatch=null;const got=nmGive(p,2);nmLog(`🚨 You caught ${NM_AI[p-1]}! They draw ${got}`);sfx('hit');if(window.GG&&GG.react)GG.react('happy','Caught you!');nmRender();}
 function nmAskColour(title,sub,cb){nmBusy=true;nmPickCb=cb;document.getElementById('nm-color-title').textContent=title;document.getElementById('nm-color-sub').textContent=sub;document.getElementById('nm-color-picker').classList.add('open');nmRender();}
 function nmPickColor(c){const cb=nmPickCb;nmPickCb=null;nmBusy=false;document.getElementById('nm-color-picker').classList.remove('open');sfx('click');if(cb)cb(c);}
 function nmAskPlayer(list,cb){
@@ -5477,10 +5619,10 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   .gg-toasts{z-index:10100;}
 
   /* level number on the avatar */
-  .av-lvl{left:50%;bottom:-.07em;transform:translateX(-50%);height:.2em;min-width:.24em;padding:0 .045em;border-radius:.1em;background:var(--ink);border:.012em solid #fff;display:flex!important;align-items:center;justify-content:center;box-shadow:0 .012em 0 rgba(0,0,0,.2);}
-  .av-lvl b{font-family:'Fredoka',sans-serif;font-weight:700;color:#fff;font-size:.14em;line-height:1;}
-  .av.av-small .av-lvl{height:.38em;min-width:.44em;bottom:-.1em;border-width:.03em;}
-  .av.av-small .av-lvl b{font-size:.27em;}
+  .av-lvl{left:50%;bottom:.03em;transform:translateX(-50%);height:.17em;padding:0 .06em;border-radius:999px;background:#FFF7E0;border:.012em solid var(--amber);display:flex!important;align-items:center;justify-content:center;white-space:nowrap;box-shadow:0 .01em .03em rgba(0,0,0,.15);}
+  .av-lvl b{font-family:'Fredoka',sans-serif;font-weight:700;color:#8A3A00;font-size:.1em;line-height:1;}
+  .av.av-small .av-lvl{height:.34em;padding:0 .1em;bottom:-.08em;border-width:.03em;}
+  .av.av-small .av-lvl b{font-size:.22em;}
 
   /* profile: level + friend code */
   .gg-level{margin:2px 0 12px;max-width:420px;}
@@ -5492,6 +5634,26 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   .gg-code-val{font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.6rem;letter-spacing:.08em;color:var(--teal-dark);background:var(--teal-pale);border-radius:12px;padding:4px 12px;font-variant-numeric:tabular-nums;}
   .gg-code p{margin:0;color:var(--muted);font-size:.9rem;flex:1 1 220px;}
   .gg-code-btns{display:flex;gap:8px;flex-wrap:wrap;}
+  .gg-acct p{flex:1 1 240px;}
+  .gg-acct .gg-acct-name{font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.15rem;color:var(--teal-dark);}
+  .gg-login-fields{text-align:left;display:flex;flex-direction:column;gap:6px;}
+  .gg-login-fields label{font-family:'Fredoka',sans-serif;font-weight:600;color:var(--ink);font-size:.95rem;margin-top:4px;}
+  .gg-login-fields>input{font:inherit;font-size:1.05rem;padding:12px 14px;border-radius:14px;border:2px solid var(--border);background:#fff;color:var(--ink);}
+  .gg-login-fields>input:focus{outline:none;border-color:var(--teal-mid);box-shadow:0 0 0 3px var(--teal-light);}
+  .gg-friends{background:#fff;border:2px solid var(--border);border-radius:20px;padding:14px 18px;margin-bottom:34px;}
+  .gg-fr-add{display:flex;gap:8px;flex-wrap:wrap;}
+  .gg-fr-add input{flex:1 1 160px;min-width:0;font:inherit;font-size:1.05rem;padding:10px 14px;border-radius:14px;border:2px solid var(--border);background:var(--bg);color:var(--ink);text-transform:uppercase;letter-spacing:.06em;}
+  .gg-fr-add input:focus{outline:none;border-color:var(--teal-mid);box-shadow:0 0 0 3px var(--teal-light);}
+  .gg-fr-add .btn-amber{padding:10px 20px;font-size:.95rem;}
+  .gg-fr-row{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid var(--teal-pale);}
+  .gg-fr-row .rk{font-family:'Fredoka',sans-serif;font-weight:700;width:28px;text-align:center;color:var(--muted);}
+  .gg-fr-row .av-wrap{width:44px;height:44px;flex:none;}
+  .gg-fr-row .nm{flex:1;min-width:0;}
+  .gg-fr-row .nm b{display:block;font-family:'Fredoka',sans-serif;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .gg-fr-row .nm span{font-size:.85rem;color:var(--muted);}
+  .gg-fr-row.me{background:var(--teal-pale);border-radius:14px;}
+  .gg-fr-x{flex:none;width:36px;height:36px;border-radius:999px;border:2px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-weight:700;}
+  .gg-fr-empty{color:var(--muted);font-size:.92rem;margin:10px 0 2px;}
   .gg-code-msg{flex-basis:100%;margin:0;font-weight:700;color:var(--teal-dark);font-size:.9rem;min-height:1.2em;}
   .gg-h2 small{font-family:'Nunito',sans-serif;font-weight:700;font-size:.85rem;color:var(--muted);margin-left:8px;}
   .gg-edit,.gg-danger,.gg-dice-btn,.shop-tool,.shop-look,.lb-tab,.help-back,.help-read{min-height:44px;}
@@ -5553,7 +5715,42 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   .shop-item.legendary::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.75) 50%,transparent 65%);transform:translateX(-120%);animation:rwShineLoop 3.2s ease-in-out infinite;pointer-events:none;}
   @keyframes rwShineLoop{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
   @media (prefers-reduced-motion:reduce){.shop-item.legendary::after{animation:none;display:none;}}
+  .give{max-width:1120px;margin:56px auto;padding:0 24px;}
+  .give-card{display:flex;align-items:center;gap:18px 24px;flex-wrap:wrap;background:#fff;border:3px solid #FCA5A5;border-radius:32px;padding:24px 26px;box-shadow:0 8px 0 #FEE2E2;}
+  .give-ico{font-size:3rem;flex:none;}
+  .give-text{flex:1 1 300px;min-width:0;}
+  .give-text h2{font-size:clamp(1.5rem,3.5vw,2rem);margin-bottom:6px;color:var(--ink);}
+  .give-text p{color:var(--muted);line-height:1.65;font-size:.98rem;}
+  .give-note{font-size:.85rem !important;margin-top:8px;}
+  .give-btn{flex:none;}
+  @media(max-width:600px){.give-card{padding:20px;text-align:center;justify-content:center;}.give-btn{width:100%;}}
+  .gg-react{position:fixed;left:14px;bottom:14px;z-index:9000;display:flex;align-items:flex-end;gap:6px;pointer-events:none;opacity:0;transform:translateY(30px) scale(.8);transition:opacity .2s,transform .25s cubic-bezier(.34,1.56,.64,1);}
+  .gg-react.show{opacity:1;transform:none;}
+  .gg-react-av{width:76px;height:76px;filter:drop-shadow(0 4px 0 rgba(27,31,59,.25));}
+  .gg-react-bubble{background:#fff;border:3px solid var(--ink);border-radius:18px 18px 18px 4px;padding:6px 12px;font-family:'Fredoka',sans-serif;font-weight:700;color:var(--ink);font-size:1rem;display:flex;align-items:center;gap:6px;box-shadow:0 4px 0 var(--ink);margin-bottom:40px;white-space:nowrap;}
+  .gg-react-bubble b{font-size:1.4rem;line-height:1;}
+  .gg-r-sad .gg-react-bubble,.gg-r-shock .gg-react-bubble{background:#EFF6FF;}
+  .gg-r-happy .gg-react-bubble,.gg-r-wow .gg-react-bubble,.gg-r-love .gg-react-bubble{background:#FFF7E0;}
+  .gg-react.gg-r-jump .gg-react-av,.shop-stage.gg-r-jump .av{animation:ggJump .9s cubic-bezier(.3,1.6,.6,1) 2;}
+  .gg-react.gg-r-spin .gg-react-av,.shop-stage.gg-r-spin .av{animation:ggSpin 1s ease-in-out;}
+  .gg-react.gg-r-droop .gg-react-av,.shop-stage.gg-r-droop .av{animation:ggDroop 1.6s ease-in-out;}
+  .gg-react.gg-r-shake .gg-react-av,.shop-stage.gg-r-shake .av{animation:ggShake .5s ease-in-out 3;}
+  .gg-react.gg-r-nod .gg-react-av,.shop-stage.gg-r-nod .av{animation:ggNod .6s ease-in-out 2;}
+  .gg-react.gg-r-wiggle .gg-react-av,.shop-stage.gg-r-wiggle .av{animation:ggWiggle 1.4s ease-in-out;transform-origin:50% 90%;}
+  @keyframes ggWiggle{0%,100%{transform:none;}10%{transform:translateY(-10px) rotate(-14deg);}20%{transform:translateY(0) rotate(12deg) scale(1.05,.95);}30%{transform:translateY(-8px) rotate(-12deg);}40%{transform:rotate(10deg) scale(1.05,.95);}50%{transform:translateY(-6px) rotate(-8deg);}60%{transform:rotate(7deg);}70%{transform:translateY(-3px) rotate(-5deg);}80%{transform:rotate(3deg);}90%{transform:rotate(-1deg);}}
+  @keyframes ggJump{0%,100%{transform:translateY(0) scale(1);}30%{transform:translateY(-22px) scale(1.06,.95);}55%{transform:translateY(0) scale(1.08,.9);}75%{transform:translateY(-6px);}}
+  @keyframes ggSpin{0%{transform:rotate(0) scale(1);}50%{transform:rotate(200deg) scale(1.15);}100%{transform:rotate(360deg) scale(1);}}
+  @keyframes ggDroop{0%,100%{transform:none;filter:none;}25%,75%{transform:translateY(8px) rotate(-6deg) scale(.95);filter:saturate(.5) brightness(.95);}50%{transform:translateY(8px) rotate(6deg) scale(.95);filter:saturate(.5) brightness(.95);}}
+  @keyframes ggShake{0%,100%{transform:none;}25%{transform:translateX(-8px) rotate(-5deg);}75%{transform:translateX(8px) rotate(5deg);}}
+  @keyframes ggNod{0%,100%{transform:none;}50%{transform:translateY(5px) rotate(4deg);}}
+  .shop-stage{position:relative;}
+  .gg-r-face{position:absolute;right:8%;top:4%;font-size:2.4rem;opacity:0;pointer-events:none;z-index:3;}
+  .gg-r-face.pop{animation:ggFace 1.6s ease forwards;}
+  @keyframes ggFace{0%{opacity:0;transform:scale(.3) translateY(10px);}20%{opacity:1;transform:scale(1.2);}75%{opacity:1;transform:scale(1) translateY(-6px);}100%{opacity:0;transform:translateY(-20px);}}
+  @media (prefers-reduced-motion:reduce){.gg-react .gg-react-av,.shop-stage .av{animation:none !important;}.gg-react{transition:opacity .2s;transform:none;}.gg-r-face.pop{animation:ggFaceStill 1.6s linear forwards;}@keyframes ggFaceStill{0%,85%{opacity:1;}100%{opacity:0;}}}
+  @media(max-width:600px){.gg-react{left:8px;bottom:8px;}.gg-react-av{width:60px;height:60px;}.gg-react-bubble{font-size:.9rem;margin-bottom:30px;}}
   .shop-item-state.lvl{color:#B45309;}
+  .shop-boost{font-family:'Fredoka',sans-serif;font-weight:600;font-size:.85rem;color:#8A3A00;background:#FFF7E0;border:1.5px solid var(--amber);border-radius:999px;padding:4px 12px;margin:6px 0;display:inline-block;}
 
   /* new level items */
   .bg-galaxy{background:radial-gradient(ellipse at 30% 30%,rgba(236,72,153,.75),transparent 55%),radial-gradient(ellipse at 75% 70%,rgba(59,130,246,.8),transparent 55%),radial-gradient(#fff 5%,transparent 8%) 0 0/.15em .15em,#1E1B4B;}
@@ -5576,6 +5773,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
         </div>
         <div class="gg-coin-big">🪙 <b id="gg-prof-coins">0</b><span>coins</span></div>
         <div class="gg-today" id="gg-prof-today"></div>
+        <div class="gg-today" id="gg-prof-boost"></div>
         <div class="gg-prof-actions" id="gg-prof-actions">
           <button class="btn-amber" onclick="showPage('shop')">🛍️ Avatar Shop</button>
           <button class="gg-edit" style="padding:10px 16px;" onclick="showPage('leaderboard')">🏆 Leaderboard</button>
@@ -5587,6 +5785,11 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     <h2 class="gg-h2">My stats</h2>
     <div class="gg-stats" id="gg-prof-stats"></div>
 
+    <div id="gg-acct-wrap" hidden>
+    <h2 class="gg-h2">My login</h2>
+    <div class="gg-code gg-acct" id="gg-acct"></div>
+    </div>
+
     <h2 class="gg-h2">My friend code</h2>
     <div class="gg-code">
       <span class="gg-code-val" id="gg-prof-code">OWL-000</span>
@@ -5596,6 +5799,17 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
         <button class="gg-edit" onclick="ggCopyCode(true)">🔗 Share invite link</button>
       </div>
       <p class="gg-code-msg" id="gg-code-msg" aria-live="polite"></p>
+    </div>
+
+    <h2 class="gg-h2">My friends <small id="gg-fr-count"></small></h2>
+    <div class="gg-friends">
+      <div class="gg-fr-add">
+        <label for="gg-fr-input" class="sr-only">Friend code</label>
+        <input id="gg-fr-input" type="text" maxlength="7" autocomplete="off" spellcheck="false" placeholder="e.g. FOX-7KQ" onkeydown="if(event.key==='Enter')ggAddFriend()">
+        <button class="btn-amber" type="button" onclick="ggAddFriend()">➕ Add friend</button>
+      </div>
+      <p class="gg-code-msg" id="gg-fr-msg" aria-live="polite"></p>
+      <div id="gg-fr-list"></div>
     </div>
 
     <h2 class="gg-h2">How to earn coins and XP</h2>
@@ -5643,14 +5857,34 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     <p id="gg-welcome-sub">Other players see this name on the leaderboard. Make one up. Don't use your real name.</p>
     <div class="gg-nick-row">
       <label for="gg-nick-input" class="sr-only">Nickname</label>
-      <input id="gg-nick-input" type="text" maxlength="16" autocomplete="off" spellcheck="false" placeholder="e.g. Happy Panda 42" onkeydown="if(event.key==='Enter')ggSaveNick()">
+      <input id="gg-nick-input" type="text" maxlength="15" autocomplete="off" spellcheck="false" placeholder="e.g. Happy Panda 42" onkeydown="if(event.key==='Enter')ggSaveNick()">
       <button type="button" class="gg-dice-btn" onclick="ggRandomNick()">🎲 Random name</button>
     </div>
-    <p class="gg-nick-hint">3 to 16 letters, numbers or spaces.</p>
+    <p class="gg-nick-hint">3 to 15 letters, numbers or spaces.</p>
     <p class="gg-nick-err" id="gg-nick-err" aria-live="polite"></p>
     <div class="gg-modal-actions">
       <button class="btn-amber" type="button" id="gg-nick-save" onclick="ggSaveNick()">Let's play! ▶</button>
       <button class="gg-link-btn" type="button" id="gg-nick-later" onclick="ggCloseNick()">Maybe later</button>
+    </div>
+  </div>
+</div>
+<div id="gg-login" class="gg-modal" role="dialog" aria-modal="true" aria-labelledby="gg-login-title" hidden>
+  <div class="gg-modal-card">
+    <h2 id="gg-login-title">Create a login</h2>
+    <p id="gg-login-sub"></p>
+    <div class="gg-login-fields">
+      <label for="gg-login-name">Login name</label>
+      <input id="gg-login-name" type="text" maxlength="15" autocomplete="username" spellcheck="false" placeholder="e.g. pandastar42">
+      <label for="gg-login-pw">Password</label>
+      <div class="gg-nick-row"><input id="gg-login-pw" type="password" maxlength="40" autocomplete="current-password" placeholder="At least 6 characters" onkeydown="if(event.key==='Enter')ggLoginGo()">
+      <button type="button" class="gg-dice-btn" id="gg-login-eye" onclick="ggLoginEye()">👁️ Show</button></div>
+    </div>
+    <p class="gg-nick-hint" id="gg-login-hint"></p>
+    <p class="gg-nick-err" id="gg-login-err" aria-live="polite"></p>
+    <div class="gg-modal-actions">
+      <button class="btn-amber" type="button" id="gg-login-go" onclick="ggLoginGo()">Create login</button>
+      <button class="gg-link-btn" type="button" id="gg-login-switch" onclick="ggLoginSwitch()"></button>
+      <button class="gg-link-btn" type="button" onclick="ggLoginClose()">Cancel</button>
     </div>
   </div>
 </div>
@@ -5666,13 +5900,13 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   const SALT='gg-honey-v2', SOLO_CAP=300, MIN_TURNS=3, MIN_CHESS_MOVES=4, MAX_LEVEL=50;
   const CHESS_WIN=[5,10,20,35,50], CHESS_LEVELS=['Super Easy','Easy','Medium','Hard','Extra Hard'];
   const TUTORIALS=['Snake & Ladders','Standard Uno','Uno No Mercy','Chess'];
-  const PUZZLE_COUNT=10;
+  const PUZZLE_COUNT=37;
   const XP={tutorial:100,game:25,win:40,puzzle:30,daily:15};
   const TITLES=['Rookie','Explorer','Player','Pro','Champion','Master','Grandmaster','Legend','Mythic','GamesGo Hero'];
   const GAME_NAME={sl:'Snake & Ladders',uno:'Standard Uno',nm:'Uno No Mercy',chess:'Chess'};
   // which saved key each field lives in
   const KEYS={
-    'gg-profile':['nick','friendCode','created','askedNick','played','won','wins','bestChess','tutRewarded','puzRewarded','streak','bestStreak','lastVisit','week','weekPlayed','weekTutorials','snakeBest'],
+    'gg-profile':['nick','friendCode','created','askedNick','played','won','wins','bestChess','tutRewarded','puzRewarded','streak','bestStreak','lastVisit','week','weekPlayed','weekTutorials','snakeBest','friends','dailyPz','dailyTotal'],
     'gg-coins':['earned','spent','day','dayEarned','weekCoins','levelRewarded'],
     'gg-xp':['xp'],
     'gg-avatar':['owned','look','looks','activeLook','looksSaved'],
@@ -5691,7 +5925,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     played:0,won:0,wins:{sl:0,uno:0,nm:0,chess:0},bestChess:-1,tutRewarded:[],puzRewarded:[],
     streak:0,bestStreak:0,lastVisit:'',week:mondayOf(),weekPlayed:0,weekTutorials:0,snakeBest:0,
     earned:0,spent:0,day:'',dayEarned:0,weekCoins:0,levelRewarded:1,
-    xp:0,owned:[],look:null,looks:[null,null,null],activeLook:0,looksSaved:[],ach:[]};}
+    xp:0,owned:[],look:null,looks:[null,null,null],activeLook:0,looksSaved:[],ach:[],friends:[],dailyPz:{day:'',done:[]},dailyTotal:0};}
   const tampered=[];
   function int(n){n=Math.floor(Number(n));return isFinite(n)&&n>0?n:0;}
   function load(){
@@ -5720,6 +5954,9 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     if(!p.wins||typeof p.wins!=='object')p.wins={};['sl','uno','nm','chess'].forEach(g=>p.wins[g]=int(p.wins[g]));
     ['tutRewarded','puzRewarded','ach','owned','looksSaved'].forEach(k=>{if(!Array.isArray(p[k]))p[k]=[];});
     if(!Array.isArray(p.looks))p.looks=[null,null,null];
+    if(!p.dailyPz||typeof p.dailyPz!=='object'||typeof p.dailyPz.day!=='string'||!Array.isArray(p.dailyPz.done))p.dailyPz={day:'',done:[]};
+    p.dailyPz.done=p.dailyPz.done.filter(k=>k===0||k===1||k===2);p.dailyTotal=int(p.dailyTotal);
+    p.friends=(Array.isArray(p.friends)?p.friends:[]).filter(f=>f&&typeof f.uid==='string'&&f.uid.length<=128).slice(0,50).map(f=>({uid:f.uid,code:String(f.code||'').slice(0,7)}));
     p.tutRewarded=p.tutRewarded.filter(t=>TUTORIALS.includes(t));
     p.puzRewarded=p.puzRewarded.filter(i=>Number.isInteger(i)&&i>0-1&&i<PUZZLE_COUNT);
     if(typeof p.friendCode!=='string'||!/^[A-Z]{3}-[A-Z0-9]{3}$/.test(p.friendCode))p.friendCode=newCode();
@@ -5758,7 +5995,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     {id:'chess-hard',ico:'♞',t:'Chess Champ',d:'Beat the Hard chess AI',ok:()=>P.bestChess>=3},
     {id:'chess-xhard',ico:'♚',t:'Chess King',d:'Beat the Extra Hard chess AI',ok:()=>P.bestChess>=4},
     {id:'first-puzzle',ico:'🧩',t:'Puzzle Starter',d:'Solve your first chess puzzle',ok:()=>puzzlesSolved()>=1},
-    {id:'all-puzzles',ico:'🧠',t:'Puzzle Pro',d:'Solve all 10 chess puzzles',ok:()=>puzzlesSolved()>=PUZZLE_COUNT},
+    {id:'all-puzzles',ico:'🧠',t:'Puzzle Pro',d:'Solve all 37 chess puzzles',ok:()=>puzzlesSolved()>=PUZZLE_COUNT},
     {id:'uno-master',ico:'🎴',t:'Uno Master',d:'Win 10 games of Standard Uno',ok:()=>P.wins.uno>=10},
     {id:'nm-win',ico:'💀',t:'No Mercy Survivor',d:'Win a No Mercy game',ok:()=>P.wins.nm>=1},
     {id:'ladder-climber',ico:'🪜',t:'Ladder Climber',d:'Win Snake & Ladders 5 times',ok:()=>P.wins.sl>=5},
@@ -5769,7 +6006,29 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     {id:'streak7',ico:'🔥',t:'Streak 7',d:'Visit 7 days in a row',ok:()=>P.bestStreak>=7},
     {id:'level10',ico:'🔟',t:'Level 10',d:'Reach level 10',ok:()=>levelOf(P.xp).lvl>=10},
     {id:'level25',ico:'🌟',t:'Level 25',d:'Reach level 25',ok:()=>levelOf(P.xp).lvl>=25},
-    {id:'social',ico:'🦋',t:'Social Butterfly',d:'Make your first friend',ok:()=>false,soon:true},
+    {id:'puzzle-5',ico:'🧩',t:'Puzzle Solver',d:'Solve 5 chess puzzles',ok:()=>puzzlesSolved()>=5},
+    {id:'puzzle-20',ico:'🔍',t:'Puzzle Detective',d:'Solve 20 chess puzzles',ok:()=>puzzlesSolved()>=20},
+    {id:'chess-first',ico:'♟️',t:'Checkmate!',d:'Win a chess game against the computer',ok:()=>P.wins.chess>=1},
+    {id:'chess-wins10',ico:'🏰',t:'Castle Keeper',d:'Win 10 chess games',ok:()=>P.wins.chess>=10},
+    {id:'uno-first',ico:'🟥',t:'Uno!',d:'Win a game of Standard Uno',ok:()=>P.wins.uno>=1},
+    {id:'nm-5',ico:'☠️',t:'No Mercy Legend',d:'Win 5 No Mercy games',ok:()=>P.wins.nm>=5},
+    {id:'sl-first',ico:'🎲',t:'Lucky Roll',d:'Win a game of Snake & Ladders',ok:()=>P.wins.sl>=1},
+    {id:'snake-5',ico:'🐉',t:'Snake Charmer',d:'Land on 5 snakes in one game',ok:()=>P.snakeBest>=5},
+    {id:'all-rounder',ico:'🌈',t:'All-Rounder',d:'Win at all 4 games',ok:()=>['sl','uno','nm','chess'].every(g=>P.wins[g]>=1)},
+    {id:'games-50',ico:'🕹️',t:'Game Lover',d:'Finish 50 games',ok:()=>P.played>=50},
+    {id:'games-100',ico:'💯',t:'Century',d:'Finish 100 games',ok:()=>P.played>=100},
+    {id:'wins-25',ico:'🥇',t:'Winner Winner',d:'Win 25 games',ok:()=>P.won>=25},
+    {id:'coins-5000',ico:'💰',t:'Treasure Hunter',d:'Earn 5,000 coins in total',ok:()=>P.earned>=5000},
+    {id:'collector-40',ico:'🎁',t:'Super Collector',d:'Own 40 avatar items',ok:()=>itemsOwned()>=40},
+    {id:'streak3',ico:'📅',t:'Coming Back',d:'Visit 3 days in a row',ok:()=>P.bestStreak>=3},
+    {id:'streak30',ico:'🗓️',t:'Super Fan',d:'Visit 30 days in a row',ok:()=>P.bestStreak>=30},
+    {id:'level5',ico:'⭐',t:'Level 5',d:'Reach level 5',ok:()=>levelOf(P.xp).lvl>=5},
+    {id:'level50',ico:'👑',t:'Max Level',d:'Reach level 50',ok:()=>levelOf(P.xp).lvl>=50},
+    {id:'friends-5',ico:'🎉',t:'Party Time',d:'Have 5 friends',ok:()=>P.friends.length>=5},
+    {id:'daily-1',ico:'📅',t:'Daily Puzzler',d:'Solve a daily puzzle',ok:()=>P.dailyTotal>=1},
+    {id:'daily-day',ico:'🌟',t:'Perfect Day',d:'Solve all 3 daily puzzles in one day',ok:()=>P.dailyPz.done.length>=3},
+    {id:'daily-30',ico:'🗓️',t:'Puzzle Habit',d:'Solve 30 daily puzzles',ok:()=>P.dailyTotal>=30},
+    {id:'social',ico:'🦋',t:'Social Butterfly',d:'Make your first friend',ok:()=>P.friends.length>0},
     {id:'best-buddies',ico:'🤝',t:'Best Buddies',d:'Play with the same friend on 3 days',ok:()=>false,soon:true},
     {id:'team-player',ico:'🏁',t:'Team Player',d:'Finish a weekly friend goal',ok:()=>false,soon:true},
     {id:'rematch',ico:'🔁',t:'Rematch!',d:'Play 3 rematches with friends',ok:()=>false,soon:true}
@@ -5799,7 +6058,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   function grant(coinItems,xpItems){
     rollDay();
     const before={coins:coins(),xp:P.xp,level:levelOf(P.xp)};
-    const want=coinItems.reduce((a,x)=>a+x.n,0);
+    const base=coinItems.reduce((a,x)=>a+x.n,0),mult=GG.boost?GG.boost().total:1,want=Math.round(base*mult);
     const room=Math.max(0,SOLO_CAP-P.dayEarned),got=Math.min(want,room);
     if(got>0){P.earned+=got;P.dayEarned+=got;P.weekCoins+=got;}
     const xpGot=xpItems.reduce((a,x)=>a+x.n,0);P.xp+=xpGot;
@@ -5809,7 +6068,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
       const item=GG.levelItem?GG.levelItem(L):null;levels.push({lvl:L,title:levelOf(levelXP(L)).title,item});}
     const ach=newAch();
     save();
-    return {before,coins:got,capped:got<want,xp:xpGot,levels,ach,after:{coins:coins(),xp:P.xp,level:after}};
+    return {before,coins:got,capped:got<want,mult,bonus:Math.max(0,Math.min(got,want)-Math.min(got,base)),xp:xpGot,levels,ach,after:{coins:coins(),xp:P.xp,level:after}};
   }
   function levelXP(L){let x=0;for(let l=1;l<L;l++)x+=100+l*50;return x;}
 
@@ -5845,6 +6104,15 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
       P.tutRewarded.push(name);P.weekTutorials++;
       const r=grant([{n:50,why:'Tutorial finished'}],[{n:XP.tutorial,why:'Tutorial finished'}]);
       showReward(Object.assign(r,{kind:'tutorial',won:true,ico:'🎓',title:'Tutorial finished! 🎉',sub:'You learned '+name,again:()=>window.closeCelebrate&&closeCelebrate('play'),againLabel:'🎮 Play now'}),700);
+    },
+    dailyPuzzle(day,k){
+      if(day!==today()||![0,1,2].includes(k))return;
+      if(P.dailyPz.day!==day)P.dailyPz={day,done:[]};
+      if(P.dailyPz.done.includes(k))return;
+      P.dailyPz.done.push(k);P.dailyTotal++;
+      const r=grant([{n:15,why:'Daily puzzle'}],[{n:XP.puzzle,why:'Daily puzzle'}]);
+      const left=3-P.dailyPz.done.length;
+      showReward(Object.assign(r,{kind:'puzzle',won:true,ico:'📅',title:left?'Daily puzzle solved! 🎉':'All 3 done today! 🌟',sub:left?left+' more today':'New puzzles tomorrow',again:()=>window.pzNext&&pzNext(),againLabel:left?'➡️ Next daily puzzle':'🎲 Practice puzzle'}),900);
     },
     puzzleSolved(i,usedSolution){
       if(usedSolution||!Number.isInteger(i)||i<0||i>=PUZZLE_COUNT||P.puzRewarded.includes(i))return;
@@ -5906,7 +6174,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     ov.classList.toggle('rw-still',reduce());
     const banner=el('div','rw-banner');banner.append(el('div','rw-ico',r.ico),el('h2','rw-title',r.title),el('p','rw-sub',r.sub||''));card.appendChild(banner);
     const coinRow=el('div','rw-coins');coinRow.innerHTML='<span class="rw-coin-ico">🪙</span><b class="rw-coin-num">+0</b><span class="rw-coin-why"></span>';card.appendChild(coinRow);
-    coinRow.querySelector('.rw-coin-why').textContent=r.capped?'Coin limit reached for today (300 a day from games)':'';
+    coinRow.querySelector('.rw-coin-why').textContent=r.capped?'Coin limit reached for today (300 a day from games)':(r.mult>1&&r.bonus>0?'Includes +'+r.bonus+' avatar boost (×'+r.mult+')':'');
     const xpWrap=el('div');xpWrap.innerHTML=xpBarHTML();card.appendChild(xpWrap);
     const lvlBox=el('div','rw-levels');card.appendChild(lvlBox);
     const achBox=el('div','rw-achs');card.appendChild(achBox);
@@ -6029,7 +6297,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   function validNick(raw){
     const n=String(raw||'').replace(/\s+/g,' ').trim();
     if(n.length<3)return {ok:false,msg:'Make it at least 3 letters long.'};
-    if(n.length>16)return {ok:false,msg:'Make it 16 letters or shorter.'};
+    if(n.length>15)return {ok:false,msg:'Make it 15 letters or shorter.'};
     if(!/^[A-Za-z0-9 ]+$/.test(n))return {ok:false,msg:'Use only letters, numbers and spaces.'};
     const sq=squash(n),flat=sq.replace(/ /g,'');
     if(BAD_ANY.some(w=>flat.includes(w))||sq.split(' ').some(w=>BAD_WORD.includes(w)))return {ok:false,msg:'Please pick a kinder name.'};
@@ -6039,7 +6307,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   P=load();
   const ADJ=['Happy','Brave','Sunny','Speedy','Lucky','Clever','Jolly','Bouncy','Cosy','Mighty','Sparky','Zippy','Cheery','Snappy','Fuzzy','Giggly','Super','Swift','Kind','Comet'];
   const ANI=['Panda','Fox','Otter','Tiger','Koala','Bunny','Owl','Dragon','Kitten','Puppy','Turtle','Penguin','Robin','Llama','Dolphin','Lion','Bee','Hippo','Gecko','Moose'];
-  function randomNick(){for(let k=0;k<20;k++){const n=ADJ[Math.floor(Math.random()*ADJ.length)]+' '+ANI[Math.floor(Math.random()*ANI.length)]+' '+(1+Math.floor(Math.random()*99));if(n.length<=16)return n;}return 'Happy Owl 7';}
+  function randomNick(){for(let k=0;k<20;k++){const n=ADJ[Math.floor(Math.random()*ADJ.length)]+' '+ANI[Math.floor(Math.random()*ANI.length)]+' '+(1+Math.floor(Math.random()*99));if(n.length<=15)return n;}return 'Happy Owl 7';}
   GG.randomNick=randomNick;
   let nickReturn=null,nickFocus=null;
   window.ggOpenNick=function(editing,then){
@@ -6096,13 +6364,14 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     const L=levelOf(P.xp);
     set('gg-prof-nick',P.nick||'No nickname yet');set('gg-prof-coins',coins().toLocaleString('en-US'));
     set('gg-prof-today','Coins earned today: '+P.dayEarned+' of '+SOLO_CAP);
+    if(GG.boost){const b=GG.boost();set('gg-prof-boost','🚀 Coin boost ×'+b.total+' · items +'+b.rar+'% · lucky +'+b.luck+'% · level +'+b.lv+'%'+(b.total>=2?' (max)':''));}
     set('gg-prof-level','Level '+L.lvl+' · '+L.title);
     set('gg-prof-xp',L.need?L.into+' / '+L.need+' XP to level '+(L.lvl+1):'Max level reached!');
     const bar=document.getElementById('gg-prof-xpfill');if(bar)bar.style.width=(L.pct*100)+'%';
     set('gg-prof-code',P.friendCode);
     const e=document.getElementById('gg-prof-av');if(e){e.innerHTML='';e.appendChild(window.renderAvatar(GG.look(),170,{level:L.lvl}));}
     const cfg=window.GG_FIREBASE_CONFIG||{};
-    set('gg-save-text','We only save your nickname, your avatar, your coins, XP, achievements and game scores (and, once friends arrive, your friend list). We never ask for your real name, email, age, school or where you live. It is all kept in this browser on this device'+(cfg.apiKey?', and your nickname, avatar, level and scores are also shown on the public leaderboard.':'.'));
+    set('gg-save-text','We only save your nickname, your avatar, your coins, XP, achievements, game scores and your friend list. We never ask for your real name, email, age, school or where you live. It is kept in this browser. If you make a login, a copy is also saved online so you can play on other devices. Your login name and password are only used to log in.'+(cfg.apiKey?' Your nickname, avatar, level and scores are shown on the public leaderboard.':''));
     const w=document.getElementById('gg-prof-warn');w.hidden=!tampered.length;if(tampered.length)w.textContent='Some saved numbers were changed outside the games, so that part was set back to the start. Play to earn new ones!';
     const stats=[
       [coins().toLocaleString('en-US'),'Coins'],[P.xp.toLocaleString('en-US'),'Total XP'],[P.played,'Games played'],[P.won,'Wins'],
@@ -6115,6 +6384,13 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     document.getElementById('gg-prof-ach').innerHTML=ACH.map(a=>{const on=P.ach.includes(a.id);return `<div class="gg-ach-item${on?'':' locked'}"><span class="ico" aria-hidden="true">${a.ico}</span><div><b>${a.t}</b><span>${on?'Unlocked!':(a.soon?'🔒 Coming with friends: ':'🔒 ')+a.d}</span></div></div>`;}).join('');
   }
   GG.renderProfile=renderProfile;
+  // ── used by login: copy the whole profile to/from the cloud save ──
+  GG.toast=toast;
+  GG.exportProfile=()=>JSON.parse(JSON.stringify(P));
+  GG.importProfile=function(o){P=clean(Object.assign(fresh(),o||{}));tampered.length=0;save();checkAch();paint();renderProfile();};
+  GG.freshProfile=function(){P=fresh();tampered.length=0;save();paint();renderProfile();};
+  GG.newFriendCode=function(){P.friendCode=newCode();save();renderProfile();return P.friendCode;};
+  GG.friendCodeRx=/^[A-Z]{3}-[A-Z0-9]{3}$/;
   window.ggCopyCode=async function(link){
     const text=link?location.href.split('#')[0]+'#friends?add='+P.friendCode:P.friendCode;
     const msg=document.getElementById('gg-code-msg');
@@ -6377,7 +6653,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
       {id:'balloon',n:'Balloon',e:'🎈',r:'c',p:40},{id:'unocard',n:'Uno card',e:'🃏',r:'c',p:50},
       {id:'controller',n:'Game controller',e:'🎮',r:'r',p:100},{id:'wand',n:'Magic wand',e:'🪄',r:'r',p:150},
       {id:'trophy',n:'Trophy',e:'🏆',r:'e',p:300},{id:'comet',n:'Comet',e:'☄️',r:'e',lvl:15},
-      {id:'knight',n:'Golden knight',e:'♞',r:'e',ach:'chess-hard'},{id:'nmcard',n:'No Mercy +10',e:'💀',r:'e',ach:'nm-win'}],
+      {id:'magnet',n:'Coin Magnet',e:'🧲',r:'l',p:1500,boost:50},{id:'knight',n:'Golden knight',e:'♞',r:'e',ach:'chess-hard'},{id:'nmcard',n:'No Mercy +10',e:'💀',r:'e',ach:'nm-win'}],
     frame:[
       {id:'none',n:'No frame',r:'c',p:0},{id:'honey',n:'Honey',r:'c',p:30},{id:'wood',n:'Wood',r:'r',p:100},
       {id:'neon',n:'Neon',r:'e',p:350},{id:'gold',n:'Golden Frame',r:'e',lvl:10},{id:'rainbow',n:'Rainbow',r:'l',p:800},{id:'diamond',n:'Diamond',r:'l',lvl:40}],
@@ -6388,7 +6664,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     pet:[
       {id:'none',n:'No pet',r:'c',p:0},{id:'chick',n:'Chick',e:'🐣',r:'c',p:50},{id:'turtle',n:'Turtle',e:'🐢',r:'r',p:100},
       {id:'ladybug',n:'Ladybug',e:'🐞',r:'r',p:120},{id:'bee',n:'Bee',e:'🐝',r:'r',p:150},{id:'fish',n:'Fish',e:'🐠',r:'e',p:300},
-      {id:'butterfly',n:'Butterfly',e:'🦋',r:'e',p:350},{id:'babydragon',n:'Dragon Pet',e:'🐉',r:'l',lvl:20}]
+      {id:'butterfly',n:'Butterfly',e:'🦋',r:'e',p:350},{id:'clover',n:'Lucky Clover',e:'🍀',r:'e',p:600,boost:25},{id:'babydragon',n:'Dragon Pet',e:'🐉',r:'l',lvl:20}]
   };
   const RAR={c:'Common',r:'Rare',e:'Epic',l:'Legendary'};
   const ORDER=['bg','aura','body','tint','face','hat','hand','frame','badge','pet'];
@@ -6399,6 +6675,15 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   function owned(k,it){if(!it)return false;if(it.lvl)return GG.level().lvl>=it.lvl;if(it.ach)return P().ach.includes(it.ach);if(!it.p)return true;return P().owned.includes(k+':'+it.id);}
   function ownedOnly(l){const o=norm(l);ORDER.forEach(k=>{if(!owned(k,find(k,o[k])))o[k]=DEFAULT[k];});return o;}
   GG.look=function(){return ownedOnly(P().look);};
+  // ── Coin boost: rarity of worn items + lucky items + level. Max x2. The daily cap still applies. ──
+  const RAR_PCT={c:0,r:2,e:5,l:10};
+  function itemPct(k,it){if(!it||it.id==='none'||k==='tint')return 0;return it.boost||RAR_PCT[it.r]||0;}
+  GG.itemBoost=itemPct;
+  GG.boost=function(){const l=GG.look();let rar=0,luck=0;
+    ORDER.forEach(k=>{const it=find(k,l[k]);const v=itemPct(k,it);if(it&&it.boost)luck+=v;else rar+=v;});
+    const lv=Math.max(0,GG.level().lvl-1);
+    const total=Math.min(2,1+(rar+luck+lv)/100);
+    return {total:Math.round(total*100)/100,rar,luck,lv};};
   GG.ITEMS=ITEMS;GG.isOwned=(k,id)=>owned(k,find(k,id));
   GG.levelItem=function(L){for(const k in ITEMS){const it=ITEMS[k].find(x=>x.lvl===L);if(it)return {k,id:it.id,n:it.n};}return null;};
 
@@ -6472,29 +6757,56 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     if(l.frame!=='none')h+='<span class="av-frame fr-'+l.frame+'"></span>';
     if(l.badge!=='none')h+='<span class="av-badge"><b>'+find('badge',l.badge).e+'</b></span>';
     if(l.pet!=='none')h+='<span class="av-pet">'+find('pet',l.pet).e+'</span>';
-    const lv=Math.floor(Number(opts.level));if(lv>=1&&lv<=50){h+='<span class="av-lvl"><b>'+lv+'</b></span>';el.setAttribute('aria-label',describe(l)+', level '+lv);}
+    const lv=Math.floor(Number(opts.level));if(lv>=1&&lv<=50){h+='<span class="av-lvl"><b>Lv '+lv+'</b></span>';el.setAttribute('aria-label',describe(l)+', level '+lv);}
     el.innerHTML=h;return el;
   };
   // small avatar next to "You" in the games
+  // ── Avatar reactions: your character pops up and reacts to what just happened ──
+  const MOODS={
+    happy:{face:'😄',anim:'gg-r-wiggle',say:['Yes!','Nice!','Woo!','Great move!']},
+    wow:{face:'🤩',anim:'gg-r-spin',say:['WOW!','Amazing!','So cool!']},
+    love:{face:'😍',anim:'gg-r-wiggle',say:['I love it!','So stylish!','Looking good!']},
+    sad:{face:'😢',anim:'gg-r-droop',say:['Oh no!','Aww…','Ouch!']},
+    shock:{face:'😱',anim:'gg-r-shake',say:['Yikes!','Uh oh!','Watch out!']},
+    meh:{face:'🙂',anim:'gg-r-nod',say:['Okay!','Not bad!','Hmm…']}};
+  let reactTimer=null,reactLast=0;
+  GG.react=function(mood,text){
+    const m=MOODS[mood]||MOODS.happy,now=Date.now();
+    if(now-reactLast<250)return;reactLast=now;
+    let box=document.getElementById('gg-react');
+    if(!box){box=document.createElement('div');box.id='gg-react';box.className='gg-react';box.setAttribute('aria-live','polite');box.innerHTML='<div class="gg-react-av"></div><div class="gg-react-bubble"><b></b><span></span></div>';document.body.appendChild(box);}
+    const av=box.querySelector('.gg-react-av');av.innerHTML='';av.appendChild(renderAvatar(GG.look(),window.innerWidth<600?60:76,{still:true}));
+    box.querySelector('.gg-react-bubble b').textContent=m.face;box.querySelector('.gg-react-bubble span').textContent=text||m.say[Math.floor(Math.random()*m.say.length)];
+    box.className='gg-react';void box.offsetWidth;box.className='gg-react show '+m.anim+' gg-r-'+mood;
+    clearTimeout(reactTimer);reactTimer=setTimeout(()=>{box.className='gg-react';},1900);
+  };
+  // the big shop preview reacts in place instead
+  GG.reactEl=function(el,mood){if(!el)return;const m=MOODS[mood]||MOODS.happy;el.classList.remove('gg-r-wiggle','gg-r-jump','gg-r-spin','gg-r-droop','gg-r-shake','gg-r-nod');void el.offsetWidth;el.classList.add(m.anim);
+    let f=el.querySelector('.gg-r-face');if(!f){f=document.createElement('span');f.className='gg-r-face';el.appendChild(f);}f.textContent=m.face;f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');};
+  // Browser-tab icon: a mini copy of the player's avatar (background, character, colour tint and hat)
+  const FAV_BG={honey:['#FFD15C'],mint:['#A7F3D0'],sky:['#BAE6FD'],peach:['#FFC9B5'],lilac:['#DDD6FE'],dots:['#FFEBB3'],stripes:['#FFB300','#FFE7A3'],
+    stars:['#1B1F3B'],sunset:['#FF7A59','#FFB300','#6B2D7A'],ocean:['#7DD3FC','#0369A1'],candy:['#FBCFE8','#BFDBFE','#FDE68A'],space:['#0B1026','#7C3AED'],galaxy:['#1E1B4B','#EC4899','#3B82F6']};
+  let favKey='';
+  function paintFavicon(){
+    const l=norm(GG.look()),key=[l.bg,l.body,l.tint,l.hat].join('|');if(key===favKey)return;favKey=key;
+    const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');if(!x)return;
+    const cols=FAV_BG[l.bg]||['#FFD15C'];let fill=cols[0];
+    if(cols.length>1){fill=x.createLinearGradient(0,0,0,64);cols.forEach((col,k)=>fill.addColorStop(k/(cols.length-1),col));}
+    x.fillStyle=fill;x.beginPath();if(x.roundRect)x.roundRect(0,0,64,64,14);else x.rect(0,0,64,64);x.fill();
+    x.textAlign='center';x.textBaseline='middle';
+    const b=find('body',l.body),t=find('tint',l.tint),h=find('hat',l.hat);
+    const hasHat=h&&h.id!=='none'&&h.e;
+    x.save();if(t&&t.f&&'filter' in x)x.filter=t.f;
+    x.font=(hasHat?40:46)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    x.fillText(b&&b.e?b.e:'🦊',32,hasHat?40:35);x.restore();
+    if(hasHat){x.font='24px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.fillText(h.e,32,13);}
+    const link=document.getElementById('gg-favicon');if(link){link.type='image/png';link.href=c.toDataURL('image/png');}
+  }
   GG.onPaint=function(){
+    try{paintFavicon();}catch(err){}
     document.querySelectorAll('.gg-you-av').forEach(el=>{el.innerHTML='';el.appendChild(renderAvatar(GG.look(),26,{still:true}));});
     const sc=document.getElementById('shop-coins');if(sc)sc.textContent=GG.coins().toLocaleString('en-US');
-    tabIcon();
   };
-  // the little icon in the browser tab shows the player's own avatar (background colour, character, hat)
-  function tabIcon(){
-    try{
-      const lk=GG.look(),em=k=>{const it=ITEMS[k]&&ITEMS[k].find(x=>x.id===lk[k]);return it&&it.e?it.e:'';};
-      const probe=document.createElement('div');probe.className='bg-'+(lk.bg||'honey');probe.style.cssText='position:absolute;left:-99px;width:1px;height:1px;';
-      document.body.appendChild(probe);let col=getComputedStyle(probe).backgroundColor;probe.remove();
-      if(!col||/rgba\(0, 0, 0, 0\)|transparent/.test(col))col='#FFD15C';
-      const body=em('body')||'🦉',hat=em('hat');
-      const svg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='"+col+"'/><text x='32' y='"+(hat?50:46)+"' font-size='"+(hat?36:40)+"' text-anchor='middle'>"+body+"</text>"+(hat?"<text x='32' y='22' font-size='24' text-anchor='middle'>"+hat+"</text>":'')+"</svg>";
-      const href='data:image/svg+xml,'+encodeURIComponent(svg);
-      let ic=document.querySelector('link[rel="icon"]');
-      if(ic&&ic.getAttribute('href')!==href){const n=ic.cloneNode();n.setAttribute('href',href);ic.replaceWith(n);}
-    }catch(e){}
-  }
 
   // ══ SHOP ══
   const TABS=[['body','🐾 Character'],['bg','🖼️ Background'],['aura','✨ Aura'],['face','🕶️ Face'],['hat','🎩 Hat'],['hand','🎈 Hand'],['frame','🖼 Frame'],['pet','🐣 Pet']];
@@ -6566,6 +6878,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     name.textContent=(it.e&&k!=='tint'?it.e+' ':'')+it.n+(k==='tint'?' colour':'');
     if(it.id!=='none'&&k!=='tint'){const r=document.createElement('span');r.className='rar rar-'+it.r;r.textContent=RAR[it.r];name.appendChild(r);}
     box.appendChild(name);
+    {const v=GG.itemBoost(k,it);if(v){const bl=document.createElement('div');bl.className='shop-boost';bl.textContent=(it.boost?'🍀 Lucky item: ':'🚀 ')+'+'+v+'% coins while you wear it';box.appendChild(bl);}}
     const btn=document.createElement('button');btn.className='btn-amber shop-act';btn.type='button';
     const wearing=GG.look()[k]===it.id;
     if(S.confirm){
@@ -6585,8 +6898,10 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   }
   function renderLooks(){document.querySelectorAll('.shop-look').forEach(b=>{const on=+b.dataset.look===P().activeLook;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false');});}
   function renderAll(){renderStage();renderSel();renderItems();renderLooks();const sc=$('shop-coins');if(sc)sc.textContent=GG.coins().toLocaleString('en-US');}
-  function tryOn(k,id){S.prev[k]=id;S.sel={k,id};S.confirm=false;msg('');renderStage();renderSel();renderItems();if(window.sfx)sfx('click');}
+  function itemMood(k,id){const it=find(k,id);if(!it||id==='none')return 'sad';if(k==='tint'||it.r==='c')return 'meh';if(it.r==='r')return 'happy';if(it.r==='e')return 'love';return 'wow';}
+  function tryOn(k,id){S.prev[k]=id;S.sel={k,id};S.confirm=false;msg('');renderStage();renderSel();renderItems();if(window.sfx)sfx('click');GG.reactEl($('shop-stage'),itemMood(k,id));}
   function equip(k,id){
+    setTimeout(()=>GG.reactEl($('shop-stage'),id==='none'?'sad':itemMood(k,id)==='meh'?'happy':itemMood(k,id)),0);
     const p=P();p.look=Object.assign(ownedOnly(p.look),{[k]:id});p.looks[p.activeLook]=copy(p.look);
     GG.save();GG.paint();renderAll();
   }
@@ -6708,13 +7023,26 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     const [appM,authM,fs]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-auth.js'),import(base+'firebase-firestore.js')]);
     const app=appM.initializeApp(cfg),auth=authM.getAuth(app),db=fs.getFirestore(app);
     const first=await new Promise(res=>{const un=authM.onAuthStateChanged(auth,u=>{un();res(u);});});
-    const user=first||(await authM.signInAnonymously(auth)).user;
-    const uid=user.uid;
+    if(!first)await authM.signInAnonymously(auth);
+    const me=()=>auth.currentUser.uid;
+    const EMAIL='@players.gamesgo.app';
     const col=(period,weekId)=>period==='week'?fs.collection(db,'weeks',weekId,'players'):fs.collection(db,'players');
     return {
-      uid,
+      get uid(){return me();},
+      isGuest:()=>!auth.currentUser||auth.currentUser.isAnonymous,
+      loginName:()=>{const e=auth.currentUser&&auth.currentUser.email;return e?e.replace(EMAIL,''):'';},
+      // turn this guest into a real account (same player id, so nothing is lost)
+      async signUp(name,pw){await authM.linkWithCredential(auth.currentUser,authM.EmailAuthProvider.credential(name.toLowerCase()+EMAIL,pw));},
+      async logIn(name,pw){await authM.signInWithEmailAndPassword(auth,name.toLowerCase()+EMAIL,pw);},
+      async logOut(){await authM.signOut(auth);await authM.signInAnonymously(auth);},
+      async saveCloud(prof){await fs.setDoc(fs.doc(db,'saves',me()),{d:JSON.stringify(prof),at:fs.serverTimestamp()});},
+      async loadCloud(){const s=await fs.getDoc(fs.doc(db,'saves',me()));if(!s.exists())return null;try{return JSON.parse(s.data().d);}catch(e){return null;}},
+      async claimCode(code){const ref=fs.doc(db,'codes',code),s=await fs.getDoc(ref);
+        if(s.exists())return s.data().uid===me();await fs.setDoc(ref,{uid:me()});return true;},
+      async findCode(code){const s=await fs.getDoc(fs.doc(db,'codes',code));return s.exists()?s.data().uid:null;},
+      async player(id){const s=await fs.getDoc(fs.doc(db,'players',id));return s.exists()?s.data():null;},
       async save(r){
-        const ts=fs.serverTimestamp();
+        const ts=fs.serverTimestamp(),uid=me();
         await fs.setDoc(fs.doc(db,'players',uid),Object.assign({},r.all,{lastSeen:ts}));
         await fs.setDoc(fs.doc(db,'weeks',r.weekId,'players',uid),Object.assign({},r.week,{lastSeen:ts}));
       },
@@ -6727,6 +7055,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
         return c.data().count+1;
       },
       async remove(weekId){
+        const uid=me();
         await fs.deleteDoc(fs.doc(db,'players',uid)).catch(()=>{});
         await fs.deleteDoc(fs.doc(db,'weeks',weekId,'players',uid)).catch(()=>{});
       }
@@ -6743,6 +7072,7 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     return L.backendPromise;
   }
   GG.online=()=>L.status==='on';
+  GG.connect=connect;GG.syncNow=sync;GG.resetSyncState=()=>{L.codeOk=false;};
 
   // ── syncing: a few seconds after something changes, and when the device comes back online ──
   async function sync(){
@@ -6752,6 +7082,8 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     const b=await connect();if(!b)return;
     L.busy=true;
     try{await b.save(rows());L.lastSync=Date.now();}catch(e){console.warn('Leaderboard save failed',e);}
+    try{if(!L.codeOk){let ok=await b.claimCode(GG.profile().friendCode);if(!ok)ok=await b.claimCode(GG.newFriendCode());L.codeOk=ok;}}catch(e){console.warn('Friend code save failed',e);}
+    try{if(!b.isGuest())await b.saveCloud(GG.exportProfile());}catch(e){console.warn('Cloud save failed',e);}
     L.busy=false;
   }
   function later(){if(L.timer)return;L.timer=setTimeout(sync,6000);}
@@ -7271,5 +7603,152 @@ The child's messages follow.`;
   </div>
 </div>
 
+<script>
+// ══════════ LOGIN (nickname-style login name + password, no email) + FRIENDS ══════════
+(function(){
+  const $=id=>document.getElementById(id);
+  const A={mode:'signup',busy:false,friendRows:null};
+  const NAME_RX=/^[A-Za-z0-9]{3,15}$/;
+  function hasCfg(){const c=window.GG_FIREBASE_CONFIG||{};return !!(c.apiKey&&c.projectId)||!!window.GG_BACKEND;}
+  function esc(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function errText(e){const c=(e&&e.code)||'';
+    if(c.includes('email-already-in-use')||c.includes('credential-already-in-use'))return 'That login name is taken. Try another one.';
+    if(c.includes('invalid-credential')||c.includes('wrong-password')||c.includes('user-not-found')||c.includes('invalid-login'))return 'Login name or password is not right. Try again.';
+    if(c.includes('weak-password'))return 'Password needs at least 6 characters.';
+    if(c.includes('too-many-requests'))return 'Too many tries. Wait a few minutes, then try again.';
+    if(c.includes('network'))return 'No internet right now. Try again when you are online.';
+    if(c.includes('operation-not-allowed'))return 'Login is not switched on yet (ask the site owner to turn on Email/Password in Firebase).';
+    return 'Something went wrong. Please try again.';}
+
+  // ── My login section on the profile ──
+  async function renderAcct(){
+    const wrap=$('gg-acct-wrap'),box=$('gg-acct');if(!wrap||!box)return;
+    if(!hasCfg()){wrap.hidden=true;return;}
+    wrap.hidden=false;
+    box.innerHTML='<p>Connecting…</p>';
+    const b=await GG.connect();
+    if(!b){box.innerHTML='<p>Login needs the internet. Check your connection and open this page again.</p>';return;}
+    if(b.isGuest()){
+      box.innerHTML='<p>Make a login to keep your coins and avatar safe and play on another phone or computer. No email needed.</p><div class="gg-code-btns"><button class="btn-amber" type="button" onclick="ggLoginOpen(\'signup\')">🔐 Create login</button><button class="gg-edit" type="button" onclick="ggLoginOpen(\'login\')">I already have one</button></div>';
+    }else{
+      box.innerHTML='<p>Logged in as <span class="gg-acct-name">'+esc(b.loginName())+'</span>. Your progress is saved online.</p><div class="gg-code-btns"><button class="gg-edit" type="button" onclick="ggLogOut()">🚪 Log out</button></div>';
+    }
+  }
+
+  // ── dialog ──
+  function paintDialog(){
+    const su=A.mode==='signup';
+    $('gg-login-title').textContent=su?'Create a login':'Log in';
+    $('gg-login-sub').textContent=su?'Pick a login name and a password. Your coins, avatar and friends stay with you.':'Type your login name and password.';
+    $('gg-login-hint').textContent=su?'Login name: 3 to 15 letters or numbers. Don\'t use your real name. Grown-ups: please write the password down, because it can\'t be reset.':'Logging in replaces the progress on this device with your saved progress.';
+    $('gg-login-go').textContent=su?'Create login':'Log in';
+    $('gg-login-switch').textContent=su?'I already have a login':'I need a new login';
+    $('gg-login-pw').setAttribute('autocomplete',su?'new-password':'current-password');
+    $('gg-login-err').textContent='';
+  }
+  window.ggLoginOpen=function(mode){A.mode=mode;paintDialog();$('gg-login-name').value='';$('gg-login-pw').value='';$('gg-login').hidden=false;setTimeout(()=>$('gg-login-name').focus(),30);if(window.sfx)sfx('click');};
+  window.ggLoginClose=function(){$('gg-login').hidden=true;};
+  window.ggLoginSwitch=function(){A.mode=A.mode==='signup'?'login':'signup';paintDialog();};
+  window.ggLoginEye=function(){const i=$('gg-login-pw'),show=i.type==='password';i.type=show?'text':'password';$('gg-login-eye').textContent=show?'🙈 Hide':'👁️ Show';};
+  window.ggLoginGo=async function(){
+    if(A.busy)return;
+    const name=$('gg-login-name').value.trim(),pw=$('gg-login-pw').value,err=$('gg-login-err');
+    if(!NAME_RX.test(name)){err.textContent='Login name must be 3 to 15 letters or numbers (no spaces).';return;}
+    if(A.mode==='signup'&&GG.validNick&&!GG.validNick(name).ok){err.textContent='Please pick a different login name.';return;}
+    if(pw.length<6){err.textContent='Password needs at least 6 characters.';return;}
+    const b=await GG.connect();if(!b){err.textContent='No internet right now. Try again when you are online.';return;}
+    A.busy=true;$('gg-login-go').disabled=true;err.textContent=A.mode==='signup'?'Creating your login…':'Logging in…';
+    try{
+      if(A.mode==='signup'){
+        await b.signUp(name,pw);
+        await b.saveCloud(GG.exportProfile());
+        GG.toast&&GG.toast('🔐','Login created! Your progress is saved online.','info');
+      }else{
+        const wasGuest=b.isGuest();
+        if(wasGuest){try{await b.remove(GG.weekId());}catch(e){}}  // don't leave this device's guest row on the board twice
+        await b.logIn(name,pw);
+        const saved=await b.loadCloud();
+        if(saved)GG.importProfile(saved);
+        GG.resetSyncState();
+      }
+      ggLoginClose();if(window.sfx)sfx('success');
+      GG.syncNow();A.friendRows=null;GG.renderProfile();
+    }catch(e){console.warn('login',e);err.textContent=errText(e);if(A.mode==='login')GG.syncNow();}
+    A.busy=false;$('gg-login-go').disabled=false;
+  };
+  window.ggLogOut=async function(){
+    const b=await GG.connect();if(!b)return;
+    try{await b.saveCloud(GG.exportProfile());}catch(e){}
+    await b.logOut();
+    GG.freshProfile();GG.resetSyncState();A.friendRows=null;
+    GG.toast&&GG.toast('👋','Logged out. See you soon!','info');
+    GG.renderProfile();
+  };
+
+  // ── friends ──
+  async function loadFriends(){
+    const P=GG.profile(),b=await GG.connect();if(!b)return null;
+    const rows=await Promise.all(P.friends.map(f=>b.player(f.uid).then(d=>d?Object.assign({uid:f.uid},d):null).catch(()=>null)));
+    return rows.filter(Boolean);
+  }
+  async function renderFriends(){
+    const list=$('gg-fr-list'),cnt=$('gg-fr-count');if(!list)return;
+    const P=GG.profile();
+    if(window.GG_PENDING_FRIEND){$('gg-fr-input').value=window.GG_PENDING_FRIEND;window.GG_PENDING_FRIEND=null;
+      $('gg-fr-msg').textContent='Press "Add friend" to add this player.';setTimeout(()=>{const i=$('gg-fr-input');i&&i.scrollIntoView({block:'center',behavior:'smooth'});},300);}
+    cnt.textContent=P.friends.length?P.friends.length+' of 50':'';
+    if(!hasCfg()){list.innerHTML='<p class="gg-fr-empty">Friends need the online leaderboard to be switched on.</p>';return;}
+    if(!P.friends.length){list.innerHTML='<p class="gg-fr-empty">No friends yet. Ask a friend for their code and type it above. Friends can only see your nickname, avatar and scores.</p>';return;}
+    if(!A.friendRows){list.innerHTML='<p class="gg-fr-empty">Loading friends…</p>';try{A.friendRows=await loadFriends();}catch(e){A.friendRows=null;}}
+    if(!A.friendRows){list.innerHTML='<p class="gg-fr-empty">Can\'t load friends right now. Check your internet.</p>';return;}
+    const me={uid:'me',nick:P.nick||'You',look:GG.look(),level:GG.level().lvl,coins:P.earned,me:true};
+    const all=A.friendRows.concat([me]).sort((a,b)=>(b.coins|0)-(a.coins|0));
+    list.innerHTML='';
+    all.forEach((r,i)=>{
+      const row=document.createElement('div');row.className='gg-fr-row'+(r.me?' me':'');
+      row.innerHTML='<span class="rk">'+(i<3?['🥇','🥈','🥉'][i]:i+1)+'</span><span class="av-wrap"></span><span class="nm"><b></b><span></span></span>';
+      row.querySelector('.av-wrap').appendChild(window.renderAvatar(r.look||{},44,{still:true}));
+      row.querySelector('b').textContent=(r.nick||'Player')+(r.me?' (you)':'');
+      row.querySelector('.nm span').textContent='Level '+(r.level|0||1)+' · 🪙 '+(r.coins|0).toLocaleString('en-US')+' earned';
+      if(!r.me){const x=document.createElement('button');x.type='button';x.className='gg-fr-x';x.textContent='✕';x.setAttribute('aria-label','Remove '+(r.nick||'friend'));x.onclick=()=>removeFriend(r.uid,r.nick);row.appendChild(x);}
+      list.appendChild(row);
+    });
+  }
+  function removeFriend(uid,nick){
+    if(!confirm('Remove '+(nick||'this friend')+' from your friends?'))return;
+    const P=GG.profile();P.friends=P.friends.filter(f=>f.uid!==uid);GG.save();A.friendRows=A.friendRows&&A.friendRows.filter(r=>r.uid!==uid);renderFriends();
+  }
+  window.ggAddFriend=async function(){
+    const inp=$('gg-fr-input'),msg=$('gg-fr-msg'),P=GG.profile();
+    const code=inp.value.trim().toUpperCase().replace(/\s+/g,'');
+    if(!GG.friendCodeRx.test(code)){msg.textContent='A friend code looks like FOX-7KQ.';return;}
+    if(code===P.friendCode){msg.textContent='That\'s your own code! 😄';return;}
+    if(P.friends.length>=50){msg.textContent='You have 50 friends. Remove one to add another.';return;}
+    const b=await GG.connect();if(!b){msg.textContent='Adding friends needs the internet.';return;}
+    msg.textContent='Looking for that player…';
+    try{
+      const uid=await b.findCode(code);
+      if(!uid||uid===b.uid){msg.textContent='No player has that code. Check the letters and try again.';return;}
+      if(P.friends.some(f=>f.uid===uid)){msg.textContent='You are already friends!';return;}
+      const row=await b.player(uid);
+      P.friends.push({uid,code});GG.save();GG.checkAch();
+      inp.value='';msg.textContent='🎉 '+(row&&row.nick?row.nick:'Your friend')+' is now your friend!';if(window.sfx)sfx('success');
+      A.friendRows=null;renderFriends();GG.paint();
+    }catch(e){console.warn('add friend',e);msg.textContent='Could not add a friend right now. Try again soon.';}
+  };
+
+  const orig=GG.renderProfile;
+  GG.renderProfile=function(){orig();renderAcct();renderFriends();};
+  if(window.GG_PENDING_FRIEND&&document.getElementById('page-profile').classList.contains('active'))renderFriends();
+})();
+</script>
+
+<script>
+  window.ggGive=function(){
+    if(confirm('This opens the official Emirates Red Crescent donation page in a new tab, where a grown-up can choose a cause and pay safely.\n\nKids: please ask a grown-up before you go on.')){
+      window.open('https://www.emiratesrc.ae/donate/Default_en.aspx','_blank','noopener');
+    }
+  };
+</script>
 </body>
 </html>
