@@ -32,7 +32,7 @@
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="GamesGo — Learn games the easy way" />
   <meta name="twitter:description" content="Animated tutorials for Snake &amp; Ladders, Chess and Uno, plus a game against the computer for each." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23B84300'/%3E%3Crect x='14' y='14' width='36' height='36' rx='8' fill='white'/%3E%3Ccircle cx='24' cy='24' r='4' fill='%231C2B2A'/%3E%3Ccircle cx='40' cy='24' r='4' fill='%231C2B2A'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23F59E0B'/%3E%3Ccircle cx='24' cy='40' r='4' fill='%231C2B2A'/%3E%3Ccircle cx='40' cy='40' r='4' fill='%231C2B2A'/%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FFB300'/%3E%3Ctext x='32' y='46' font-size='40' text-anchor='middle'%3E%F0%9F%A6%89%3C/text%3E%3C/svg%3E" />
   <style>
     /* Base reset (the parts of Tailwind's preflight this page relied on, without loading Tailwind) */
     *,::before,::after{border-width:0;border-style:solid;border-color:#e5e7eb;}
@@ -6479,7 +6479,22 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   GG.onPaint=function(){
     document.querySelectorAll('.gg-you-av').forEach(el=>{el.innerHTML='';el.appendChild(renderAvatar(GG.look(),26,{still:true}));});
     const sc=document.getElementById('shop-coins');if(sc)sc.textContent=GG.coins().toLocaleString('en-US');
+    tabIcon();
   };
+  // the little icon in the browser tab shows the player's own avatar (background colour, character, hat)
+  function tabIcon(){
+    try{
+      const lk=GG.look(),em=k=>{const it=ITEMS[k]&&ITEMS[k].find(x=>x.id===lk[k]);return it&&it.e?it.e:'';};
+      const probe=document.createElement('div');probe.className='bg-'+(lk.bg||'honey');probe.style.cssText='position:absolute;left:-99px;width:1px;height:1px;';
+      document.body.appendChild(probe);let col=getComputedStyle(probe).backgroundColor;probe.remove();
+      if(!col||/rgba\(0, 0, 0, 0\)|transparent/.test(col))col='#FFD15C';
+      const body=em('body')||'🦉',hat=em('hat');
+      const svg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='"+col+"'/><text x='32' y='"+(hat?50:46)+"' font-size='"+(hat?36:40)+"' text-anchor='middle'>"+body+"</text>"+(hat?"<text x='32' y='22' font-size='24' text-anchor='middle'>"+hat+"</text>":'')+"</svg>";
+      const href='data:image/svg+xml,'+encodeURIComponent(svg);
+      let ic=document.querySelector('link[rel="icon"]');
+      if(ic&&ic.getAttribute('href')!==href){const n=ic.cloneNode();n.setAttribute('href',href);ic.replaceWith(n);}
+    }catch(e){}
+  }
 
   // ══ SHOP ══
   const TABS=[['body','🐾 Character'],['bg','🖼️ Background'],['aura','✨ Aura'],['face','🕶️ Face'],['hat','🎩 Hat'],['hand','🎈 Hand'],['frame','🖼 Frame'],['pet','🐣 Pet']];
