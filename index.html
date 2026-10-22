@@ -513,7 +513,7 @@
           <div class="card-cta">
             <span class="badge-teal" id="sl-card-badge" style="font-size:0.7rem;">Available now</span>
             <div style="display:flex;gap:8px;">
-              <button class="learn-btn" style="background:#B84300;" onclick="showPage('sl-game')">🎮 Play now</button>
+              <button class="learn-btn" style="background:#B84300;" onclick="ggPlayChoose('sl')">🎮 Play now</button>
               <button id="sl-card-btn" class="learn-btn" onclick="showPage('snake-ladders')">Learn to play</button>
             </div>
           </div>
@@ -531,7 +531,7 @@
           <div class="card-cta">
             <span class="badge-teal" id="chess-card-badge" style="font-size:0.7rem;">Available now</span>
             <div style="display:flex;gap:8px;">
-              <button class="learn-btn" style="background:#1B1F3B;" onclick="showPage('chess',true)">♟️ Play now</button>
+              <button class="learn-btn" style="background:#1B1F3B;" onclick="ggPlayChoose('chess')">♟️ Play now</button>
               <button id="chess-card-btn" class="learn-btn" onclick="showPage('chess',false)">Learn to play</button>
             </div>
           </div>
@@ -610,7 +610,7 @@
           <div class="card-cta" style="margin-top:14px;">
             <span class="badge-teal" id="uno-standard-badge" style="font-size:0.7rem;">Available now</span>
             <div style="display:flex;gap:8px;">
-              <button class="learn-btn" style="background:#DC2626;" onclick="showPage('uno-game')">🎴 Play now</button>
+              <button class="learn-btn" style="background:#DC2626;" onclick="ggPlayChoose('uno')">🎴 Play now</button>
               <button class="learn-btn" onclick="showPage('uno-standard')">Learn to play</button>
             </div>
           </div>
@@ -641,7 +641,7 @@
           <div class="card-cta" style="margin-top:14px;">
             <span class="badge-teal" id="nm-card-badge" style="font-size:0.7rem;">Available now</span>
             <div style="display:flex;gap:8px;">
-              <button class="learn-btn" style="background:#991B1B;" onclick="showPage('uno-nomercy-game')">💀 Play now</button>
+              <button class="learn-btn" style="background:#991B1B;" onclick="ggPlayChoose('nm')">💀 Play now</button>
               <button id="nm-learn-btn" class="learn-btn" onclick="showPage('uno-nomercy')">Learn to play</button>
             </div>
           </div>
@@ -1758,7 +1758,7 @@
 
   // Init slideshow when snake-ladders page is shown
 
-  const GG_PAGES = ['home','snake-ladders','sl-game','uno-versions','uno-standard','uno-game','uno-nomercy','uno-nomercy-game','chess','profile','shop','leaderboard'];
+  const GG_PAGES = ['home','snake-ladders','sl-game','uno-versions','uno-standard','uno-game','uno-nomercy','uno-nomercy-game','chess','profile','shop','leaderboard','play-friend'];
   // Keep the address bar in step with the page, so Refresh and the browser Back button work
   function ggSetHash(h, replace) {
     const url = h === 'home' ? location.pathname + location.search : '#' + h;
@@ -1772,6 +1772,7 @@
     const [id, sub] = h.split('/');
     const inv = h.match(/^friends\?add=([A-Z]{3}-[A-Z0-9]{3})$/);
     if (inv) { window.GG_PENDING_FRIEND = inv[1]; showPage('profile', false, true); return; }
+    if (id === 'play-friend' && sub) window.GG_PENDING_ROOM = sub;
     if (GG_PAGES.includes(id)) showPage(id, sub === 'play' ? true : (sub === 'puzzles' ? 'puzzles' : false), true);
     else showPage('home', false, true);
   }
@@ -1787,6 +1788,7 @@
     if (typeof unoConfettiAnim2 !== 'undefined') cancelAnimationFrame(unoConfettiAnim2);
     if (typeof rollOffTimeouts !== 'undefined') { rollOffTimeouts.forEach(t => clearTimeout(t)); rollOffTimeouts = []; }
     if (typeof window.chLeave === 'function') window.chLeave();
+    if (id !== 'play-friend' && window.GG && GG.pfLeave) GG.pfLeave();
     if (typeof nmLeave === 'function') nmLeave();
     const picker = document.getElementById('uno-color-picker'); if (picker) picker.classList.remove('open');
     const unoWin = document.getElementById('uno-winner'); if (unoWin) unoWin.style.display = 'none';
@@ -1799,6 +1801,7 @@
     if (window.GG && GG.closeReward) GG.closeReward(true);
     if (id === 'profile' && window.GG) { GG.renderProfile(); GG.needNick(); }
     if (id === 'shop' && window.GG) { GG.shopOpen(); GG.needNick(); }
+    if (id === 'play-friend' && window.GG && GG.pfOpen) GG.pfOpen();
     if (id === 'leaderboard' && window.GG) { GG.lbOpen(); GG.needNick(() => GG.lbOpen()); }
     document.getElementById('nav-home-links').style.display = isHome ? '' : 'none';
     const backBtn = document.getElementById('nav-back-btn');
@@ -7034,6 +7037,83 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   </section>
 </div>
 
+
+<!-- ══ CHESS WITH A FRIEND (online) ══ -->
+<style>
+  .pf-lobby-card{background:#fff;border:2px solid var(--border);border-radius:20px;padding:16px 18px;margin-bottom:16px;}
+  .pf-lobby-card h3{font-family:'Fredoka',sans-serif;font-weight:700;color:var(--ink);font-size:1.2rem;margin:0 0 6px;}
+  .pf-lobby-card p{color:var(--muted);margin:0 0 10px;font-size:.95rem;}
+  .pf-join{display:flex;gap:8px;flex-wrap:wrap;}
+  .pf-join input{flex:1 1 160px;min-width:0;min-height:44px;font:inherit;font-size:1.05rem;padding:10px 14px;border-radius:14px;border:2px solid var(--border);background:var(--bg);color:var(--ink);text-transform:uppercase;letter-spacing:.1em;}
+  .pf-bar{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--border);border-radius:18px;padding:8px 14px;margin:10px 0;}
+  .pf-bar.turn{border-color:var(--amber);box-shadow:0 0 0 3px #FFF1CC;}
+  .pf-bar .nm{flex:1;min-width:0;font-family:'Fredoka',sans-serif;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pf-bar .nm small{display:block;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;color:var(--muted);}
+  .pf-bar .col{font-size:1.4rem;}
+  .pf-status{font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.25rem;color:var(--ink);margin:0 0 6px;}
+  .pf-sub{color:var(--muted);font-size:.92rem;margin:0 0 10px;}
+  .pf-btns{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;}
+  .pf-btn{min-height:44px;padding:0 16px;border-radius:999px;border:2px solid var(--border);background:#fff;color:var(--ink);font-family:'Fredoka',sans-serif;font-weight:600;font-size:.95rem;cursor:pointer;}
+  .pf-btn.go{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .pf-btn.warn{color:#B91C1C;}
+  .pf-react{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px;}
+  .pf-react button{min-width:44px;min-height:44px;border-radius:14px;border:2px solid var(--border);background:#fff;font-size:1.25rem;cursor:pointer;}
+  .pf-bubble{position:fixed;left:50%;top:90px;transform:translateX(-50%);z-index:9000;background:var(--ink);color:#fff;border-radius:999px;padding:10px 20px;font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.1rem;box-shadow:0 6px 0 rgba(0,0,0,.2);animation:ggPop 2.4s ease forwards;pointer-events:none;}
+  .pf-moves{font-family:'Fredoka',sans-serif;font-size:.92rem;color:var(--ink);max-height:150px;overflow:auto;line-height:1.7;}
+  .pf-moves b{color:var(--muted);font-weight:600;margin-right:2px;}
+  .pf-invite{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:9500;width:min(92vw,440px);background:#fff;border:3px solid var(--ink);border-radius:22px;box-shadow:0 8px 0 var(--ink);padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+  .pf-invite[hidden]{display:none;}
+  .pf-invite b{font-family:'Fredoka',sans-serif;color:var(--ink);font-size:1.05rem;}
+  .pf-lobby-friends .gg-fr-row{border-top:1px solid var(--teal-pale);}
+  @media(prefers-reduced-motion:reduce){.pf-bubble{animation:none;}}
+</style>
+<div id="page-play-friend" class="page">
+  <section class="gg-wrap" style="max-width:980px;">
+    <div class="gg-eyebrow">♟️ Chess with a friend</div>
+    <div id="pf-lobby">
+      <h1 class="shop-title">Play chess online</h1>
+      <div class="pf-lobby-card" id="pf-resume" hidden>
+        <h3>▶️ Game in progress</h3><p>You have a game that is not finished.</p>
+        <div class="pf-btns"><button class="pf-btn go" type="button" onclick="pfResume()">Go back to my game</button></div>
+      </div>
+      <div class="pf-lobby-card pf-lobby-friends">
+        <h3>Invite a friend</h3>
+        <p>Pick a friend. They will see your invite as soon as they open GamesGo.</p>
+        <div id="pf-friends"></div>
+      </div>
+      <div class="pf-lobby-card">
+        <h3>Got a game code?</h3>
+        <p>Type the 6 letters your friend sent you.</p>
+        <div class="pf-join"><input id="pf-code" maxlength="6" autocomplete="off" spellcheck="false" placeholder="e.g. K7Q2XM" onkeydown="if(event.key==='Enter')pfJoinCode()"><button class="btn-amber" type="button" onclick="pfJoinCode()">Join game</button></div>
+        <p id="pf-lobby-msg" class="gg-code-msg" aria-live="polite" style="margin-top:8px"></p>
+      </div>
+    </div>
+    <div id="pf-room" hidden>
+      <div class="pf-bar" id="pf-top"></div>
+      <div class="ch-game-wrap">
+        <div>
+          <div style="display:grid;grid-template-columns:18px 1fr;">
+            <div class="ch-rank-labels" id="pf-rank-labels"></div>
+            <div class="ch-board-grid" id="pf-board"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:18px 1fr;"><div></div><div class="ch-file-labels" id="pf-file-labels"></div></div>
+        </div>
+        <div class="ch-panel">
+          <div class="ch-panel-card">
+            <p class="pf-status" id="pf-status" aria-live="polite"></p>
+            <p class="pf-sub" id="pf-sub"></p>
+            <div class="pf-btns" id="pf-btns"></div>
+            <div class="pf-react" id="pf-react" role="group" aria-label="Quick reactions"></div>
+          </div>
+          <div class="ch-panel-card"><h4 style="margin:0 0 6px;">Moves</h4><div class="pf-moves" id="pf-moves"></div></div>
+        </div>
+      </div>
+      <div class="pf-bar" id="pf-bottom"></div>
+    </div>
+  </section>
+</div>
+<div id="pf-invite" class="pf-invite" role="alertdialog" aria-label="Game invite" hidden></div>
+
 <script>
 // ══════════ LEADERBOARD + ONLINE SAVING ══════════
 // Coins, avatar and stats always live in this browser first. When the Firebase settings at the top of this
@@ -7106,6 +7186,16 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
       async blockUser(uid){const w=fs.writeBatch(db);w.set(fs.doc(db,'blocks',me(),'list',uid),{at:fs.serverTimestamp()});
         w.delete(fs.doc(db,'friendsOf',me(),'list',uid));w.delete(fs.doc(db,'friendsOf',uid,'list',me()));
         w.delete(fs.doc(db,'inbox',me(),'from',uid));w.delete(fs.doc(db,'outbox',uid,'to',me()));await w.commit();},
+      // ── online games: one small document per game, watched live ──
+      async createRoom(id,d){await fs.setDoc(fs.doc(db,'rooms',id),Object.assign({},d,{created:fs.serverTimestamp()}));},
+      async getRoom(id){const s=await fs.getDoc(fs.doc(db,'rooms',id));return s.exists()?s.data():null;},
+      watchRoom(id,cb){return fs.onSnapshot(fs.doc(db,'rooms',id),s=>cb(s.exists()?s.data():null),e=>cb(null,e));},
+      async patchRoom(id,p){const o={};Object.keys(p).forEach(k=>{o[k]=p[k]==='@now'?fs.serverTimestamp():p[k];});await fs.updateDoc(fs.doc(db,'rooms',id),o);},
+      async deleteRoom(id){await fs.deleteDoc(fs.doc(db,'rooms',id));},
+      async sendInvite(to,room,game){await fs.setDoc(fs.doc(db,'invites',to,'from',me()),{room,game,at:fs.serverTimestamp()});},
+      async cancelInvite(to){await fs.deleteDoc(fs.doc(db,'invites',to,'from',me()));},
+      async dropInvite(from){await fs.deleteDoc(fs.doc(db,'invites',me(),'from',from));},
+      watchInvites(cb){return fs.onSnapshot(fs.collection(db,'invites',me(),'from'),s=>cb(s.docs.map(d=>Object.assign({from:d.id},d.data()))),()=>{});},
       async save(r){
         const ts=fs.serverTimestamp(),uid=me();
         await fs.setDoc(fs.doc(db,'players',uid),Object.assign({},r.all,{lastSeen:ts}));
@@ -7806,8 +7896,9 @@ The child's messages follow.`;
     const [friends,incoming,outgoing]=await Promise.all([rowsFor(b,fr),rowsFor(b,inc),rowsFor(b,out)]);
     return {fr,inc,out,friends,incoming,outgoing};
   }
+  window.GG_paintBadge=function(){paintBadge();};
   function paintBadge(){
-    const d=$('gg-chip-dot');if(!d)return;const n=A.inboxCount|0;
+    const d=$('gg-chip-dot');if(!d)return;const n=(A.inboxCount|0)+(window.GG_INV|0);
     d.hidden=!n;d.textContent=n>9?'9+':String(n);
     const chip=$('gg-chip');if(chip){const base=(chip.getAttribute('aria-label')||'').replace(/ \(\d+ friend request.*$/,'');chip.setAttribute('aria-label',n?base+' ('+n+' friend request'+(n>1?'s':'')+')':base);}
   }
@@ -7868,6 +7959,7 @@ The child's messages follow.`;
     const all=d.friends.map(r=>Object.assign({},r,{online:now-tsMs(r.lastSeen)<ONLINE_MS})).concat([Object.assign(me,{me:true})]).sort((x,y)=>(y.coins|0)-(x.coins|0));
     all.forEach((r,i)=>{
       const acts=r.me?[]:[
+        {label:'♟️ Play chess',cls:'yes',aria:'Invite '+(r.nick||'friend')+' to play chess online',fn:()=>GG.pfInvite(r.uid,r.nick||'')},
         {label:'Remove',cls:'soft',aria:'Remove '+(r.nick||'friend'),fn:()=>{if(confirm('Remove '+(r.nick||'this friend')+' from your friends?'))frDo(b=>b.removeFriend(r.uid),'Friend removed.');}},
         {label:'🚫 Block',cls:'soft',aria:'Block '+(r.nick||'friend'),fn:()=>{if(confirm('Block '+(r.nick||'this player')+'? They will be removed from your friends and cannot send requests.'))frDo(b=>b.blockUser(r.uid),'Blocked.');}}];
       const row=mkRow(r,(r.me?'':(r.online?'Online · ':'Offline · '))+lvlText(r),acts,r.me?{me:true}:{dot:r.online});
@@ -7919,6 +8011,351 @@ The child's messages follow.`;
       window.open('https://www.emiratesrc.ae/donate/Default_en.aspx','_blank','noopener');
     }
   };
+</script>
+
+<script>
+// ══════════ CHESS WITH A FRIEND (online) ══════════
+// A game is one small Firestore document ("room"). Both players watch it live. Moves are checked on each
+// player's screen with chess.js. (The free Firebase plan has no server that could check moves, so this is for
+// friends who trust each other.) Only preset reactions are allowed: no free chat.
+(function(){
+  const $=id=>document.getElementById(id);
+  const CODE_CHARS='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const GLYPH={K:'♚',Q:'♛',R:'♜',B:'♝',N:'♞',P:'♟'};
+  const REACTS=['👍','😮','😂','👏','😢','❤️'];
+  const REACT_TEXT=['Nice!','Wow!','Haha!','Good game!','Oh no!','Love it!'];
+  const AWAY_MS=60000, INVITE_MS=20*60*1000, HB_MS=25000;
+  const PF={id:null,data:null,chess:null,unsub:null,hb:null,tick:null,sel:null,legal:[],busy:false,flip:false,lastReact:0,looks:{},ver:-1,moveCount:0,invites:[],invUnsub:null,shownInvite:null,endSounded:false,joining:false};
+  const tsMs=v=>v&&typeof v.toMillis==='function'?v.toMillis():(typeof v==='number'?v:0);
+  const nickOf=n=>{const v=GG.validNick&&GG.validNick(n);return v&&v.ok?v.nick:'Player';};
+  const sfxs=n=>{try{if(window.sfx)sfx(n);}catch(e){}};
+  const newId=()=>{let s='';for(let i=0;i<6;i++)s+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)];return s;};
+  const hasLib=()=>typeof Chess==='function';
+  const saved=()=>{try{return localStorage.getItem('gg-pf-room')||'';}catch(e){return '';}};
+  const keep=id=>{try{id?localStorage.setItem('gg-pf-room',id):localStorage.removeItem('gg-pf-room');}catch(e){}};
+  const myColor=d=>d.host===PF.me?d.hostColor:(d.hostColor==='w'?'b':'w');
+  const oppNick=d=>nickOf(d.host===PF.me?d.guestNick:d.hostNick);
+
+  // ── routing helpers ──
+  GG.pfOpen=async function(){
+    const want=(window.GG_PENDING_ROOM||'').toUpperCase();window.GG_PENDING_ROOM=null;
+    const ok=await new Promise(res=>GG.needNick(()=>res(true)));
+    if(!ok)return;
+    if(want){joinRoom(want);return;}
+    if(PF.id&&PF.data){showRoom();return;}
+    showLobby();
+  };
+  GG.pfLeave=function(){stopWatching(false);};
+  function showLobby(){
+    $('pf-lobby').hidden=false;$('pf-room').hidden=true;
+    $('pf-lobby-msg').textContent='';
+    const rid=saved();$('pf-resume').hidden=!rid;
+    renderLobbyFriends();
+  }
+  function showRoom(){$('pf-lobby').hidden=true;$('pf-room').hidden=false;render();}
+  window.pfResume=function(){const id=saved();if(id)joinRoom(id);};
+  window.pfJoinCode=function(){
+    const c=$('pf-code').value.trim().toUpperCase();
+    if(!/^[A-Z0-9]{6}$/.test(c)){$('pf-lobby-msg').textContent='A game code has 6 letters or numbers.';return;}
+    joinRoom(c);
+  };
+  async function renderLobbyFriends(){
+    const box=$('pf-friends');box.innerHTML='<p class="gg-fr-empty">Loading your friends…</p>';
+    try{
+      const b=await GG.connect();if(!b){box.innerHTML='<p class="gg-fr-empty">Playing online needs the internet.</p>';return;}
+      const ids=await b.friendIds();
+      if(!ids.length){box.innerHTML='<p class="gg-fr-empty">You have no friends yet. Go to your profile, send a friend request, and come back when they accept.</p>';return;}
+      const rows=await Promise.all(ids.map(id=>b.player(id).then(d=>Object.assign({uid:id},d||{})).catch(()=>({uid:id}))));
+      box.innerHTML='';
+      rows.forEach(r=>{
+        const row=document.createElement('div');row.className='gg-fr-row';
+        row.innerHTML='<span class="av-wrap"></span><span class="nm"><b></b><span></span></span><span class="gg-fr-acts"></span>';
+        row.querySelector('.av-wrap').appendChild(window.renderAvatar(r.look||{},44,{still:true}));
+        row.querySelector('b').textContent=nickOf(r.nick);
+        const on=Date.now()-tsMs(r.lastSeen)<8*60*1000;
+        const sub=row.querySelector('.nm span');const d=document.createElement('span');d.className=on?'gg-on':'gg-off';sub.appendChild(d);sub.appendChild(document.createTextNode(on?'Online':'Offline'));
+        const bt=document.createElement('button');bt.type='button';bt.className='gg-fr-btn yes';bt.textContent='♟️ Invite';bt.setAttribute('aria-label','Invite '+nickOf(r.nick)+' to play chess');
+        bt.onclick=()=>GG.pfInvite(r.uid,nickOf(r.nick));row.querySelector('.gg-fr-acts').appendChild(bt);box.appendChild(row);
+      });
+    }catch(e){console.warn('lobby',e);box.innerHTML='<p class="gg-fr-empty">Can\'t load friends right now.</p>';}
+  }
+
+  // ── create / join ──
+  GG.pfInvite=async function(friendUid,friendNick,swapFrom){
+    if(!hasLib()){alert('The chess engine could not load. Check your internet and reload.');return;}
+    GG.needNick(async()=>{
+      const b=await GG.connect();if(!b){alert('Playing online needs the internet.');return;}
+      PF.me=b.uid;const id=newId();
+      const hostColor=swapFrom?(swapFrom==='w'?'b':'w'):(Math.random()<0.5?'w':'b');
+      const start=new Chess().fen();
+      const data={game:'chess',host:b.uid,guest:null,hostNick:GG.profile().nick,guestNick:null,hostColor,fen:start,moves:[],turn:'w',status:'waiting',result:null,reason:null,ver:0,drawOffer:null,react:null,hbH:null,hbG:null};
+      try{
+        await b.createRoom(id,data);
+        if(friendUid)await b.sendInvite(friendUid,id,'chess');
+      }catch(e){console.warn('create room',e);alert('Could not start the game. Check your internet and try again.');return;}
+      PF.invitedUid=friendUid||null;PF.invitedNick=friendNick||'';
+      window.GG_PENDING_ROOM=id;showPage('play-friend');
+    });
+  };
+  async function joinRoom(id){
+    if(PF.joining)return;PF.joining=true;
+    try{
+      const b=await GG.connect();if(!b){toLobby('Playing online needs the internet.');return;}
+      PF.me=b.uid;stopWatching(false);
+      let d=await b.getRoom(id);
+      if(!d){keep('');toLobby('That game was not found. It may have finished or been closed.');return;}
+      if(d.host!==b.uid&&d.guest!==b.uid){
+        if(d.guest||d.status!=='waiting'){toLobby('That game already has two players.');return;}
+        try{await b.patchRoom(id,{guest:b.uid,guestNick:GG.profile().nick,status:'playing',ver:1});}
+        catch(e){console.warn('join',e);toLobby('Could not join that game. It may have just filled up.');return;}
+      }
+      PF.id=id;PF.data=null;PF.chess=null;PF.ver=-1;PF.sel=null;PF.legal=[];PF.endSounded=false;PF.lastReact=0;
+      keep(id);try{ggSetHash('play-friend/'+id,true);}catch(e){}
+      $('pf-lobby').hidden=true;$('pf-room').hidden=false;
+      PF.unsub=b.watchRoom(id,(room,err)=>{if(err){console.warn('watch',err);return;}apply(room);});
+      PF.hb=setInterval(heartbeat,HB_MS);heartbeat();
+      PF.tick=setInterval(()=>{if(PF.data)renderStatus();},4000);
+    }finally{PF.joining=false;}
+  }
+  function toLobby(msg){showPage('play-friend');showLobby();$('pf-lobby-msg').textContent=msg||'';}
+  function stopWatching(clearSaved){
+    if(PF.unsub){try{PF.unsub();}catch(e){}PF.unsub=null;}
+    clearInterval(PF.hb);clearInterval(PF.tick);PF.hb=PF.tick=null;
+    PF.id=null;PF.data=null;PF.chess=null;PF.sel=null;PF.legal=[];PF.ver=-1;
+    if(clearSaved)keep('');
+  }
+  async function heartbeat(){
+    const d=PF.data;if(!PF.id)return;
+    try{const b=await GG.connect();if(!b)return;
+      if(d&&d.status==='done')return;
+      const mine=d?(d.host===PF.me?'hbH':'hbG'):null;if(!mine)return;
+      await b.patchRoom(PF.id,{[mine]:'@now'});}catch(e){}
+  }
+
+  // ── a new version of the room arrived ──
+  function apply(d){
+    if(!PF.id)return;
+    if(!d){ // the room was deleted
+      const msg=PF.data&&PF.data.status==='waiting'?'The game was cancelled.':'The game was closed.';
+      stopWatching(true);toLobby(msg);return;
+    }
+    if(d.ver<PF.ver)return;
+    // rebuild the position from the list of moves, checking every one
+    if(!hasLib())return;
+    const g=new Chess();
+    for(const san of d.moves||[]){if(!g.move(san)){PF.corrupt=true;break;}}
+    const before=PF.moveCount;PF.moveCount=(d.moves||[]).length;
+    PF.chess=g;PF.ver=d.ver;PF.data=d;PF.flip=myColor(d)==='b';
+    if(PF.sel&&!g.moves({square:PF.sel}).length){PF.sel=null;PF.legal=[];}
+    if(PF.moveCount>before&&before>0){const last=g.history({verbose:true}).pop();if(last){sfxs(g.in_check()?'check':(last.captured?'capture':'move'));}}
+    if(d.react&&d.react.n!==PF.lastReact){
+      if(PF.lastReact!==0&&d.react.by!==PF.me)bubble(REACTS[d.react.k]+' '+REACT_TEXT[d.react.k]);
+      PF.lastReact=d.react.n;
+    }
+    if(d.status==='done'&&!PF.endSounded){
+      PF.endSounded=true;const won=d.result===myColor(d);
+      sfxs(d.result==='draw'?'move':(won?'win':'lose'));
+      if(window.GG&&GG.react)GG.react(d.result==='draw'?'happy':(won?'happy':'sad'),won?'You won!':'Good game!');
+      keep('');
+    }
+    render();
+  }
+  function bubble(t){const b=document.createElement('div');b.className='pf-bubble';b.textContent=t;document.body.appendChild(b);setTimeout(()=>b.remove(),2500);}
+
+  // ── drawing ──
+  async function barHTML(el,uid,nick,color,turn,isMe){
+    el.className='pf-bar'+(turn?' turn':'');el.innerHTML='<span class="av-wrap" style="width:40px;height:40px;flex:none"></span><span class="nm"><span class="n"></span><small></small></span><span class="col" aria-hidden="true"></span>';
+    el.querySelector('.n').textContent=nick+(isMe?' (you)':'');
+    el.querySelector('.col').textContent=color==='w'?'⚪':'⚫';
+    el.querySelector('small').textContent=(color==='w'?'White':'Black')+(turn?' · to move':'');
+    const look=PF.looks[uid];
+    el.querySelector('.av-wrap').appendChild(window.renderAvatar(look||{},40,{still:true}));
+    if(!look&&uid&&!PF.looks.hasOwnProperty(uid)){PF.looks[uid]=null;const b=await GG.connect();if(b)b.player(uid).then(r=>{if(r&&r.look){PF.looks[uid]=r.look;if(PF.data)render();}}).catch(()=>{});}
+  }
+  function render(){
+    const d=PF.data,g=PF.chess;if(!d||!g||$('pf-room').hidden)return;
+    const mc=myColor(d),oc=mc==='w'?'b':'w';
+    const oppUid=d.host===PF.me?d.guest:d.host;
+    const myTurn=d.status==='playing'&&d.turn===mc,oppTurn=d.status==='playing'&&d.turn===oc;
+    barHTML($('pf-top'),oppUid,d.guest||d.host!==PF.me?oppNick(d):'Waiting…',oc,oppTurn,false);
+    barHTML($('pf-bottom'),PF.me,nickOf(GG.profile().nick),mc,myTurn,true);
+    // board
+    const el=$('pf-board');el.innerHTML='';
+    const targets=PF.legal.map(m=>m.to);
+    for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+      const f=PF.flip?7-c:c,rk=PF.flip?r:7-r,sq=String.fromCharCode(97+f)+(rk+1);
+      const piece=g.get(sq),isLegal=targets.indexOf(sq)>=0;
+      let cls='ch-sq '+((r+c)%2===0?'ch-light':'ch-dark');
+      if(PF.sel===sq)cls+=' ch-sel';if(isLegal&&!piece)cls+=' ch-legal';if(isLegal&&piece)cls+=' ch-cap';
+      if(g.in_check()&&piece&&piece.type==='k'&&piece.color===g.turn())cls+=' ch-check';
+      const hist=g.history({verbose:true}),last=hist[hist.length-1];
+      if(last&&(last.from===sq||last.to===sq)&&PF.sel!==sq)cls+=' ch-last';
+      const sqEl=document.createElement('div');sqEl.className=cls;sqEl.setAttribute('role','button');sqEl.tabIndex=0;
+      sqEl.setAttribute('aria-label',sq+(piece?', '+(piece.color==='w'?'white ':'black ')+({k:'king',q:'queen',r:'rook',b:'bishop',n:'knight',p:'pawn'})[piece.type]:', empty'));
+      if(piece){const sp=document.createElement('span');sp.className='ch-piece '+(piece.color==='w'?'ch-white':'ch-black');sp.textContent=GLYPH[piece.type.toUpperCase()]+'︎';sp.setAttribute('aria-hidden','true');sqEl.appendChild(sp);}
+      sqEl.addEventListener('click',()=>click(sq));
+      sqEl.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();click(sq);}});
+      el.appendChild(sqEl);
+    }
+    const ranks=PF.flip?['1','2','3','4','5','6','7','8']:['8','7','6','5','4','3','2','1'],files=PF.flip?['h','g','f','e','d','c','b','a']:['a','b','c','d','e','f','g','h'];
+    $('pf-rank-labels').innerHTML=ranks.map(x=>'<div class="ch-rank-label">'+x+'</div>').join('');
+    $('pf-file-labels').innerHTML=files.map(x=>'<div class="ch-file-label">'+x+'</div>').join('');
+    // moves
+    const H=g.history();let mv='';for(let i=0;i<H.length;i+=2)mv+='<b>'+(i/2+1)+'.</b> '+H[i]+(H[i+1]?' '+H[i+1]:'')+'&nbsp; ';
+    $('pf-moves').innerHTML=mv||'<span style="color:var(--muted)">No moves yet.</span>';
+    renderStatus();renderReactions();
+  }
+  function renderReactions(){
+    const box=$('pf-react');if(box.children.length)return;
+    REACTS.forEach((e,i)=>{const b=document.createElement('button');b.type='button';b.textContent=e;b.setAttribute('aria-label','Send reaction: '+REACT_TEXT[i]);b.onclick=()=>sendReact(i);box.appendChild(b);});
+  }
+  function btn(label,cls,fn,aria){const b=document.createElement('button');b.type='button';b.className='pf-btn '+(cls||'');b.textContent=label;if(aria)b.setAttribute('aria-label',aria);b.onclick=fn;return b;}
+  function renderStatus(){
+    const d=PF.data,g=PF.chess;if(!d||!g)return;
+    const st=$('pf-status'),sub=$('pf-sub'),bx=$('pf-btns');bx.innerHTML='';sub.textContent='';
+    const mc=myColor(d),opp=oppNick(d);
+    if(d.status==='waiting'){
+      st.textContent='⏳ Waiting for your friend…';
+      sub.textContent=PF.invitedNick?('We told '+PF.invitedNick+' you are waiting. You can also share this link or the code '+PF.id+'.'):'Share this link or the code '+PF.id+' with a friend.';
+      bx.appendChild(btn('🔗 Copy invite link','go',copyLink));
+      bx.appendChild(btn('Cancel game','warn',cancelWaiting));
+      return;
+    }
+    if(d.status==='done'){
+      const won=d.result===mc;
+      const why={checkmate:'by checkmate',resign:d.result===mc?(opp+' resigned'):'you resigned',stalemate:'stalemate: no legal moves',agreed:'you agreed to a draw',left:(d.result===mc?opp+' left the game':'game ended because you left'),repetition:'same position three times','insufficient':'not enough pieces to checkmate','fifty':'50 moves without a capture'}[d.reason]||'';
+      st.textContent=d.result==='draw'?'🤝 It is a draw!':(won?'🎉 You won!':'😅 '+opp+' won this time');
+      sub.textContent=why?why.charAt(0).toUpperCase()+why.slice(1)+'.':'';
+      bx.appendChild(btn('🔁 Rematch (swap colours)','go',rematch));
+      bx.appendChild(btn('Back to friends','',()=>{stopWatching(true);showPage('profile');}));
+      return;
+    }
+    // playing
+    const myTurn=d.turn===mc;
+    st.textContent=myTurn?(g.in_check()?'⚠️ You are in check! Your move.':'✨ Your move!'):('⏳ '+opp+' is thinking…'+(g.in_check()?' (check!)':''));
+    const oppHb=tsMs(d.host===PF.me?d.hbG:d.hbH),away=oppHb&&Date.now()-oppHb>AWAY_MS;
+    if(away){sub.textContent=opp+' seems to be away. They have a little time to come back.';
+      if(Date.now()-oppHb>AWAY_MS*1.5)bx.appendChild(btn('🏆 Claim the win','go',claimWin));}
+    if(d.drawOffer&&d.drawOffer!==PF.me){
+      sub.textContent=opp+' offers a draw.';
+      bx.appendChild(btn('🤝 Accept draw','go',()=>finish('draw','agreed')));
+      bx.appendChild(btn('No thanks','',()=>patch({drawOffer:null})));
+    }else{
+      bx.appendChild(btn(d.drawOffer===PF.me?'Draw offered…':'🤝 Offer a draw','',()=>{if(d.drawOffer!==PF.me)patch({drawOffer:PF.me});}));
+    }
+    bx.appendChild(btn('🏳️ Resign','warn',()=>{if(confirm('Resign this game? '+opp+' will win.'))finish(mc==='w'?'b':'w','resign');}));
+    bx.appendChild(btn('Leave for now','',()=>{showPage('profile');}));
+  }
+
+  // ── actions ──
+  async function patch(p){
+    try{const b=await GG.connect();if(!b)throw new Error('offline');await b.patchRoom(PF.id,p);return true;}
+    catch(e){console.warn('patch',e);$('pf-sub').textContent='That did not go through. Check your internet and try again.';return false;}
+  }
+  function finish(result,reason){return patch({status:'done',result,reason,ver:PF.ver+1,drawOffer:null});}
+  function claimWin(){return finish(myColor(PF.data),'left');}
+  function sendReact(i){if(!PF.data||PF.data.status==='waiting')return;const n=Date.now();PF.lastReact=n;bubble(REACTS[i]+' '+REACT_TEXT[i]);patch({react:{by:PF.me,k:i,n}});}
+  function copyLink(){
+    const url=location.origin+location.pathname+'#play-friend/'+PF.id;
+    const done=()=>{$('pf-sub').textContent='Link copied! Send it to your friend.';};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done,()=>{prompt('Copy this link:',url);});else prompt('Copy this link:',url);
+  }
+  async function cancelWaiting(){
+    const id=PF.id,inv=PF.invitedUid;
+    try{const b=await GG.connect();if(b){if(inv)await b.cancelInvite(inv).catch(()=>{});await b.deleteRoom(id).catch(()=>{});}}catch(e){}
+    stopWatching(true);showPage('profile');
+  }
+  async function rematch(){
+    const d=PF.data;if(!d)return;const oppUid=d.host===PF.me?d.guest:d.host,nk=oppNick(d),mc=myColor(d);
+    stopWatching(true);
+    GG.pfInvite(oppUid,nk,mc);
+  }
+  function click(sq){
+    const d=PF.data,g=PF.chess;if(!d||!g||PF.busy||d.status!=='playing')return;
+    const mc=myColor(d);if(d.turn!==mc)return;
+    const piece=g.get(sq);
+    if(PF.sel){
+      if(sq===PF.sel){PF.sel=null;PF.legal=[];render();return;}
+      const mv=PF.legal.filter(m=>m.to===sq)[0];
+      if(mv){play(mv);return;}
+    }
+    if(piece&&piece.color===mc){PF.sel=sq;PF.legal=g.moves({square:sq,verbose:true});}else{PF.sel=null;PF.legal=[];}
+    render();
+  }
+  async function play(mv){
+    const d=PF.data,g=PF.chess;PF.sel=null;PF.legal=[];PF.busy=true;
+    const m=g.move({from:mv.from,to:mv.to,promotion:'q'});
+    if(!m){PF.busy=false;render();return;}
+    sfxs(g.in_check()?'check':(m.captured?'capture':'move'));
+    const moves=g.history();let status='playing',result=null,reason=null;
+    if(g.game_over()){
+      status='done';
+      if(g.in_checkmate()){result=m.color;reason='checkmate';}
+      else{result='draw';reason=g.in_stalemate()?'stalemate':g.in_threefold_repetition()?'repetition':g.insufficient_material()?'insufficient':'fifty';}
+    }
+    const p={fen:g.fen(),moves,turn:g.turn(),status,result,reason,ver:d.ver+1,drawOffer:null};
+    PF.data=Object.assign({},d,p);PF.ver=p.ver;PF.moveCount=moves.length;render();
+    const ok=await patch(p);
+    PF.busy=false;
+    if(!ok){ // put the move back and let the next update from the server fix everything
+      g.undo();PF.data=d;PF.ver=d.ver;PF.moveCount=d.moves.length;render();
+    }
+  }
+
+  // ── invites from friends (live) ──
+  async function startInvites(){
+    if(PF.invUnsub)return;
+    try{
+      const b=await GG.connect();if(!b||!b.watchInvites)return;PF.me=b.uid;
+      PF.invUnsub=b.watchInvites(list=>{PF.invites=(list||[]).filter(i=>i&&i.game==='chess'&&/^[A-Z0-9]{6}$/.test(i.room||'')&&(!tsMs(i.at)||Date.now()-tsMs(i.at)<INVITE_MS));paintInvites();});
+    }catch(e){console.warn('invites',e);}
+  }
+  async function paintInvites(){
+    window.GG_INV=PF.invites.length;if(window.GG_paintBadge)GG_paintBadge();
+    const box=$('pf-invite');
+    const inRoom=PF.id&&PF.data&&PF.data.status!=='done'&&!$('pf-room').hidden;
+    const i=PF.invites[0];
+    if(!i||inRoom){box.hidden=true;PF.shownInvite=null;return;}
+    if(PF.shownInvite===i.from+i.room&&!box.hidden)return;
+    PF.shownInvite=i.from+i.room;
+    let nm='A friend';try{const b=await GG.connect();const r=await b.player(i.from);if(r&&r.nick)nm=nickOf(r.nick);}catch(e){}
+    box.innerHTML='<b></b><div class="pf-btns" style="margin:0"></div>';
+    box.querySelector('b').textContent='♟️ '+nm+' invited you to play chess!';
+    const bt=box.querySelector('.pf-btns');
+    bt.appendChild(btn('Join the game','go',async()=>{box.hidden=true;const b=await GG.connect();if(b)b.dropInvite(i.from).catch(()=>{});window.GG_PENDING_ROOM=i.room;showPage('play-friend');}));
+    bt.appendChild(btn('No thanks','',async()=>{box.hidden=true;const b=await GG.connect();if(b)b.dropInvite(i.from).catch(()=>{});}));
+    box.hidden=false;sfxs('coin');
+  }
+  setTimeout(()=>{if(GG.hasNick()&&GG.online&&GG.online())startInvites();else setTimeout(()=>{if(GG.hasNick())startInvites();},4000);},4500);
+  window.GG_startInvites=startInvites;
+  window.addEventListener('beforeunload',()=>{});
+})();
+</script>
+
+<script>
+// ══════════ PLAY NOW: with the computer, or with a friend ══════════
+(function(){
+  const G={sl:{name:'Snake & Ladders',page:'sl-game',online:false},chess:{name:'Chess',page:'chess',solo:true,online:true},uno:{name:'Uno',page:'uno-game',online:false},nm:{name:"Uno Show 'Em No Mercy",page:'uno-nomercy-game',online:false}};
+  let box=null,last=null;
+  function close(){if(box){box.remove();box=null;}if(last&&last.focus)try{last.focus();}catch(e){}}
+  window.ggPlayChoose=function(k){
+    const g=G[k];if(!g)return;close();last=document.activeElement;
+    box=document.createElement('div');box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label','How do you want to play '+g.name+'?');
+    box.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(20,15,5,.6);display:flex;align-items:center;justify-content:center;padding:16px;';
+    const card=document.createElement('div');card.style.cssText='background:var(--card,#fff8e1);color:var(--ink,#2b1d00);border-radius:20px;padding:22px 18px;max-width:380px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.35);text-align:center;font-family:Nunito,sans-serif;';
+    const h=document.createElement('h2');h.textContent='Play '+g.name;h.style.cssText='margin:0 0 4px;font-family:Fredoka,sans-serif;font-size:1.4rem;';
+    const p=document.createElement('p');p.textContent='Who do you want to play with?';p.style.cssText='margin:0 0 14px;';
+    const mk=(txt,sub,fn,off)=>{const b=document.createElement('button');b.type='button';b.style.cssText='display:block;width:100%;min-height:56px;margin:8px 0;padding:10px 14px;border-radius:14px;border:2px solid var(--amber,#f5a623);background:'+(off?'rgba(0,0,0,.06)':'var(--amber,#f5a623)')+';color:var(--ink,#2b1d00);font-family:Fredoka,sans-serif;font-weight:800;font-size:1.05rem;cursor:'+(off?'default':'pointer')+';';
+      b.innerHTML='<span></span><small style="display:block;font-family:Nunito,sans-serif;font-weight:700;font-size:.82rem;opacity:.8"></small>';b.firstChild.textContent=txt;b.querySelector('small').textContent=sub;
+      if(off){b.setAttribute('aria-disabled','true');}else b.onclick=()=>{close();fn();};return b;};
+    const ai=mk('🤖 Play the computer','Practice on your own',()=>showPage(g.page,g.solo?true:undefined));
+    const fr=g.online?mk('👫 Play with a friend','Online, with someone on your friends list',()=>showPage('play-friend')):mk('👫 Play with a friend','Coming soon!',null,true);
+    const x=document.createElement('button');x.type='button';x.textContent='Cancel';x.style.cssText='margin-top:6px;min-height:44px;padding:8px 18px;border:none;background:none;color:inherit;font-weight:800;text-decoration:underline;cursor:pointer;';x.onclick=close;
+    card.append(h,p,ai,fr,x);box.appendChild(card);box.addEventListener('click',e=>{if(e.target===box)close();});
+    box.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+    document.body.appendChild(box);ai.focus();
+  };
+})();
 </script>
 </body>
 </html>
