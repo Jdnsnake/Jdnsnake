@@ -8024,8 +8024,20 @@ The child's messages follow.`;
   const GLYPH={K:'♚',Q:'♛',R:'♜',B:'♝',N:'♞',P:'♟'};
   const REACTS=['👍','😮','😂','👏','😢','❤️'];
   const REACT_TEXT=['Nice!','Wow!','Haha!','Good game!','Oh no!','Love it!'];
+  const SL_SN={17:7,54:34,62:19,87:24,99:78},SL_LAD={4:14,9:31,28:84,40:59,51:67};
+  // Snake & Ladders: the whole game is the list of dice rolls. Both screens replay it, so they always agree.
+  function slState(rolls){
+    const pos={w:0,b:0};let last=null,winner=null;
+    for(let i=0;i<rolls.length&&!winner;i++){
+      const who=i%2?'b':'w',face=rolls[i],from=pos[who];let to=from+face,bounced=false;
+      if(to>100){to=100-(to-100);bounced=true;}
+      let end=to,kind='';if(SL_LAD[to]){end=SL_LAD[to];kind='ladder';}else if(SL_SN[to]){end=SL_SN[to];kind='snake';}
+      pos[who]=end;last={who,face,from,landed:to,end,kind,bounced};if(end===100)winner=who;
+    }
+    return {pos,last,winner};
+  }
   const AWAY_MS=60000, INVITE_MS=20*60*1000, HB_MS=25000;
-  const PF={id:null,data:null,chess:null,unsub:null,hb:null,tick:null,sel:null,legal:[],busy:false,flip:false,lastReact:0,looks:{},ver:-1,moveCount:0,invites:[],invUnsub:null,shownInvite:null,endSounded:false,joining:false};
+  const PF={lobbyGame:'chess',sl:null,id:null,data:null,chess:null,unsub:null,hb:null,tick:null,sel:null,legal:[],busy:false,flip:false,lastReact:0,looks:{},ver:-1,moveCount:0,invites:[],invUnsub:null,shownInvite:null,endSounded:false,joining:false};
   const tsMs=v=>v&&typeof v.toMillis==='function'?v.toMillis():(typeof v==='number'?v:0);
   const nickOf=n=>{const v=GG.validNick&&GG.validNick(n);return v&&v.ok?v.nick:'Player';};
   const sfxs=n=>{try{if(window.sfx)sfx(n);}catch(e){}};
@@ -8039,6 +8051,7 @@ The child's messages follow.`;
   // ── routing helpers ──
   GG.pfOpen=async function(){
     const want=(window.GG_PENDING_ROOM||'').toUpperCase();window.GG_PENDING_ROOM=null;
+    PF.lobbyGame=window.GG_PF_GAME==='sl'?'sl':'chess';window.GG_PF_GAME=null;
     const ok=await new Promise(res=>GG.needNick(()=>res(true)));
     if(!ok)return;
     if(want){joinRoom(want);return;}
@@ -8048,6 +8061,7 @@ The child's messages follow.`;
   GG.pfLeave=function(){stopWatching(false);};
   function showLobby(){
     $('pf-lobby').hidden=false;$('pf-room').hidden=true;
+    $('pf-lobby').querySelector('h1').textContent=PF.lobbyGame==='sl'?'Play Snake & Ladders online':'Play chess online';
     $('pf-lobby-msg').textContent='';
     const rid=saved();$('pf-resume').hidden=!rid;
     renderLobbyFriends();
@@ -8074,24 +8088,25 @@ The child's messages follow.`;
         row.querySelector('b').textContent=nickOf(r.nick);
         const on=Date.now()-tsMs(r.lastSeen)<8*60*1000;
         const sub=row.querySelector('.nm span');const d=document.createElement('span');d.className=on?'gg-on':'gg-off';sub.appendChild(d);sub.appendChild(document.createTextNode(on?'Online':'Offline'));
-        const bt=document.createElement('button');bt.type='button';bt.className='gg-fr-btn yes';bt.textContent='♟️ Invite';bt.setAttribute('aria-label','Invite '+nickOf(r.nick)+' to play chess');
-        bt.onclick=()=>GG.pfInvite(r.uid,nickOf(r.nick));row.querySelector('.gg-fr-acts').appendChild(bt);box.appendChild(row);
+        const bt=document.createElement('button');bt.type='button';bt.className='gg-fr-btn yes';bt.textContent=PF.lobbyGame==='sl'?'🐍 Invite':'♟️ Invite';bt.setAttribute('aria-label','Invite '+nickOf(r.nick)+' to play '+(PF.lobbyGame==='sl'?'Snake and Ladders':'chess'));
+        bt.onclick=()=>GG.pfInvite(r.uid,nickOf(r.nick),undefined,PF.lobbyGame);row.querySelector('.gg-fr-acts').appendChild(bt);box.appendChild(row);
       });
     }catch(e){console.warn('lobby',e);box.innerHTML='<p class="gg-fr-empty">Can\'t load friends right now.</p>';}
   }
 
   // ── create / join ──
-  GG.pfInvite=async function(friendUid,friendNick,swapFrom){
-    if(!hasLib()){alert('The chess engine could not load. Check your internet and reload.');return;}
+  GG.pfInvite=async function(friendUid,friendNick,swapFrom,game){
+    game=game==='sl'?'sl':'chess';
+    if(game==='chess'&&!hasLib()){alert('The chess engine could not load. Check your internet and reload.');return;}
     GG.needNick(async()=>{
       const b=await GG.connect();if(!b){alert('Playing online needs the internet.');return;}
       PF.me=b.uid;const id=newId();
       const hostColor=swapFrom?(swapFrom==='w'?'b':'w'):(Math.random()<0.5?'w':'b');
-      const start=new Chess().fen();
-      const data={game:'chess',host:b.uid,guest:null,hostNick:GG.profile().nick,guestNick:null,hostColor,fen:start,moves:[],turn:'w',status:'waiting',result:null,reason:null,ver:0,drawOffer:null,react:null,hbH:null,hbG:null};
+      const start=game==='chess'?new Chess().fen():'';
+      const data={game,host:b.uid,guest:null,hostNick:GG.profile().nick,guestNick:null,hostColor,fen:start,moves:[],turn:'w',status:'waiting',result:null,reason:null,ver:0,drawOffer:null,react:null,hbH:null,hbG:null};
       try{
         await b.createRoom(id,data);
-        if(friendUid)await b.sendInvite(friendUid,id,'chess');
+        if(friendUid)await b.sendInvite(friendUid,id,game);
       }catch(e){console.warn('create room',e);alert('Could not start the game. Check your internet and try again.');return;}
       PF.invitedUid=friendUid||null;PF.invitedNick=friendNick||'';
       window.GG_PENDING_ROOM=id;showPage('play-friend');
@@ -8109,7 +8124,7 @@ The child's messages follow.`;
         try{await b.patchRoom(id,{guest:b.uid,guestNick:GG.profile().nick,status:'playing',ver:1});}
         catch(e){console.warn('join',e);toLobby('Could not join that game. It may have just filled up.');return;}
       }
-      PF.id=id;PF.data=null;PF.chess=null;PF.ver=-1;PF.sel=null;PF.legal=[];PF.endSounded=false;PF.lastReact=0;
+      PF.id=id;PF.data=null;PF.chess=null;PF.sl=null;PF.ver=-1;PF.moveCount=-1;PF.sel=null;PF.legal=[];PF.endSounded=false;PF.lastReact=0;
       keep(id);try{ggSetHash('play-friend/'+id,true);}catch(e){}
       $('pf-lobby').hidden=true;$('pf-room').hidden=false;
       PF.unsub=b.watchRoom(id,(room,err)=>{if(err){console.warn('watch',err);return;}apply(room);});
@@ -8141,13 +8156,21 @@ The child's messages follow.`;
     }
     if(d.ver<PF.ver)return;
     // rebuild the position from the list of moves, checking every one
-    if(!hasLib())return;
-    const g=new Chess();
-    for(const san of d.moves||[]){if(!g.move(san)){PF.corrupt=true;break;}}
+    let g=null;
+    if(d.game==='sl'){PF.sl=slState(d.moves||[]);PF.chess=null;PF.flip=false;}
+    else{
+      if(!hasLib())return;
+      g=new Chess();
+      for(const san of d.moves||[]){if(!g.move(san)){PF.corrupt=true;break;}}
+      PF.chess=g;PF.flip=myColor(d)==='b';
+      if(PF.sel&&!g.moves({square:PF.sel}).length){PF.sel=null;PF.legal=[];}
+    }
     const before=PF.moveCount;PF.moveCount=(d.moves||[]).length;
-    PF.chess=g;PF.ver=d.ver;PF.data=d;PF.flip=myColor(d)==='b';
-    if(PF.sel&&!g.moves({square:PF.sel}).length){PF.sel=null;PF.legal=[];}
-    if(PF.moveCount>before&&before>0){const last=g.history({verbose:true}).pop();if(last){sfxs(g.in_check()?'check':(last.captured?'capture':'move'));}}
+    PF.ver=d.ver;PF.data=d;
+    if(PF.moveCount>before&&before>=0){
+      if(g){const last=g.history({verbose:true}).pop();if(last){sfxs(g.in_check()?'check':(last.captured?'capture':'move'));}}
+      else{const L=PF.sl.last;if(L)sfxs(L.kind==='ladder'?'ladder':L.kind==='snake'?'snake':'step');}
+    }
     if(d.react&&d.react.n!==PF.lastReact){
       if(PF.lastReact!==0&&d.react.by!==PF.me)bubble(REACTS[d.react.k]+' '+REACT_TEXT[d.react.k]);
       PF.lastReact=d.react.n;
@@ -8166,14 +8189,18 @@ The child's messages follow.`;
   async function barHTML(el,uid,nick,color,turn,isMe){
     el.className='pf-bar'+(turn?' turn':'');el.innerHTML='<span class="av-wrap" style="width:40px;height:40px;flex:none"></span><span class="nm"><span class="n"></span><small></small></span><span class="col" aria-hidden="true"></span>';
     el.querySelector('.n').textContent=nick+(isMe?' (you)':'');
-    el.querySelector('.col').textContent=color==='w'?'⚪':'⚫';
-    el.querySelector('small').textContent=(color==='w'?'White':'Black')+(turn?' · to move':'');
+    const isSL=PF.data&&PF.data.game==='sl';
+    el.querySelector('.col').textContent=isSL?(color==='w'?'🟠':'🔵'):(color==='w'?'⚪':'⚫');
+    el.querySelector('small').textContent=(isSL?(color==='w'?'Orange':'Blue'):(color==='w'?'White':'Black'))+(turn?(isSL?' · to roll':' · to move'):'');
     const look=PF.looks[uid];
     el.querySelector('.av-wrap').appendChild(window.renderAvatar(look||{},40,{still:true}));
     if(!look&&uid&&!PF.looks.hasOwnProperty(uid)){PF.looks[uid]=null;const b=await GG.connect();if(b)b.player(uid).then(r=>{if(r&&r.look){PF.looks[uid]=r.look;if(PF.data)render();}}).catch(()=>{});}
   }
   function render(){
-    const d=PF.data,g=PF.chess;if(!d||!g||$('pf-room').hidden)return;
+    const d=PF.data,g=PF.chess;
+    if(d&&d.game==='sl'&&PF.sl&&!$('pf-room').hidden){renderSL();return;}
+    if(!d||!g||$('pf-room').hidden)return;
+    $('pf-board').style.gridTemplateColumns='';$('pf-rank-labels').hidden=false;$('pf-file-labels').hidden=false;
     const mc=myColor(d),oc=mc==='w'?'b':'w';
     const oppUid=d.host===PF.me?d.guest:d.host;
     const myTurn=d.status==='playing'&&d.turn===mc,oppTurn=d.status==='playing'&&d.turn===oc;
@@ -8211,7 +8238,7 @@ The child's messages follow.`;
   }
   function btn(label,cls,fn,aria){const b=document.createElement('button');b.type='button';b.className='pf-btn '+(cls||'');b.textContent=label;if(aria)b.setAttribute('aria-label',aria);b.onclick=fn;return b;}
   function renderStatus(){
-    const d=PF.data,g=PF.chess;if(!d||!g)return;
+    const d=PF.data,g=PF.chess;if(!d||(!g&&d.game!=='sl'))return;
     const st=$('pf-status'),sub=$('pf-sub'),bx=$('pf-btns');bx.innerHTML='';sub.textContent='';
     const mc=myColor(d),opp=oppNick(d);
     if(d.status==='waiting'){
@@ -8223,7 +8250,7 @@ The child's messages follow.`;
     }
     if(d.status==='done'){
       const won=d.result===mc;
-      const why={checkmate:'by checkmate',resign:d.result===mc?(opp+' resigned'):'you resigned',stalemate:'stalemate: no legal moves',agreed:'you agreed to a draw',left:(d.result===mc?opp+' left the game':'game ended because you left'),repetition:'same position three times','insufficient':'not enough pieces to checkmate','fifty':'50 moves without a capture'}[d.reason]||'';
+      const why={checkmate:'by checkmate',resign:d.result===mc?(opp+' resigned'):'you resigned',stalemate:'stalemate: no legal moves',agreed:'you agreed to a draw',left:(d.result===mc?opp+' left the game':'game ended because you left'),repetition:'same position three times',home:(d.result===mc?'you reached square 100':opp+' reached square 100'),'insufficient':'not enough pieces to checkmate','fifty':'50 moves without a capture'}[d.reason]||'';
       st.textContent=d.result==='draw'?'🤝 It is a draw!':(won?'🎉 You won!':'😅 '+opp+' won this time');
       sub.textContent=why?why.charAt(0).toUpperCase()+why.slice(1)+'.':'';
       bx.appendChild(btn('🔁 Rematch (swap colours)','go',rematch));
@@ -8231,6 +8258,7 @@ The child's messages follow.`;
       return;
     }
     // playing
+    if(d.game==='sl'){slPlaying(d,st,sub,bx,mc,opp);return;}
     const myTurn=d.turn===mc;
     st.textContent=myTurn?(g.in_check()?'⚠️ You are in check! Your move.':'✨ Your move!'):('⏳ '+opp+' is thinking…'+(g.in_check()?' (check!)':''));
     const oppHb=tsMs(d.host===PF.me?d.hbG:d.hbH),away=oppHb&&Date.now()-oppHb>AWAY_MS;
@@ -8245,6 +8273,56 @@ The child's messages follow.`;
     }
     bx.appendChild(btn('🏳️ Resign','warn',()=>{if(confirm('Resign this game? '+opp+' will win.'))finish(mc==='w'?'b':'w','resign');}));
     bx.appendChild(btn('Leave for now','',()=>{showPage('profile');}));
+  }
+
+  // ── Snake & Ladders ──
+  function renderSL(){
+    const d=PF.data,S=PF.sl;if(!d||!S)return;
+    const mc=myColor(d),oc=mc==='w'?'b':'w',oppUid=d.host===PF.me?d.guest:d.host;
+    const live=d.status==='playing';
+    barHTML($('pf-top'),oppUid,d.guest||d.host!==PF.me?oppNick(d):'Waiting…',oc,live&&d.turn===oc,false);
+    barHTML($('pf-bottom'),PF.me,nickOf(GG.profile().nick),mc,live&&d.turn===mc,true);
+    $('pf-rank-labels').hidden=true;$('pf-file-labels').hidden=true;
+    const el=$('pf-board');el.innerHTML='';el.style.gridTemplateColumns='repeat(10,1fr)';
+    for(let r=0;r<10;r++)for(let c=0;c<10;c++){
+      const fb=9-r,n=fb%2===0?fb*10+c+1:fb*10+10-c;
+      const cell=document.createElement('div');cell.className='pf-slsq'+((r+c)%2?' b':'')+(S.last&&S.last.end===n?' last':'');
+      let lab='<i>'+n+'</i>';
+      if(SL_LAD[n])lab+='<u>🪜'+SL_LAD[n]+'</u>';else if(SL_SN[n])lab+='<u>🐍'+SL_SN[n]+'</u>';
+      let tk='';if(S.pos.w===n)tk+='🟠';if(S.pos.b===n)tk+='🔵';
+      cell.innerHTML=lab+(tk?'<s>'+tk+'</s>':'');
+      if(n===100)cell.classList.add('goal');
+      el.appendChild(cell);
+    }
+    el.setAttribute('role','img');
+    const pn=x=>x===0?'Start':'square '+x;
+    el.setAttribute('aria-label','Snake and Ladders board. Orange is on '+pn(S.pos.w)+'. Blue is on '+pn(S.pos.b)+'.');
+    $('pf-moves').textContent='🟠 Orange: '+pn(S.pos.w)+'   ·   🔵 Blue: '+pn(S.pos.b)+'   ·   You are '+(mc==='w'?'🟠 Orange':'🔵 Blue');
+    renderStatus();renderReactions();
+  }
+  function slPlaying(d,st,sub,bx,mc,opp){
+    const myTurn=d.turn===mc,L=PF.sl&&PF.sl.last;
+    st.textContent=myTurn?'🎲 Your turn: roll the dice!':'⏳ '+opp+' is rolling…';
+    if(L){const who=L.who===mc?'You':opp;
+      sub.textContent=who+' rolled a '+L.face+(L.bounced?' and bounced back':'')+(L.kind==='ladder'?' — 🪜 up to '+L.end:L.kind==='snake'?' — 🐍 down to '+L.end:' → '+L.end)+'.';}
+    else sub.textContent='First to square 100 wins. You need to land on 100 exactly or you bounce back.';
+    const oppHb=tsMs(d.host===PF.me?d.hbG:d.hbH),away=oppHb&&Date.now()-oppHb>AWAY_MS;
+    if(away){sub.textContent=opp+' seems to be away. They have a little time to come back.';
+      if(Date.now()-oppHb>AWAY_MS*1.5)bx.appendChild(btn('🏆 Claim the win','go',claimWin));}
+    if(myTurn)bx.appendChild(btn('🎲 Roll the dice','go',slRoll));
+    bx.appendChild(btn('🏳️ Resign','warn',()=>{if(confirm('Resign this game? '+opp+' will win.'))finish(mc==='w'?'b':'w','resign');}));
+    bx.appendChild(btn('Leave for now','',()=>{showPage('profile');}));
+  }
+  async function slRoll(){
+    const d=PF.data;if(!d||PF.busy||d.status!=='playing'||d.game!=='sl')return;
+    const mc=myColor(d);if(d.turn!==mc)return;
+    PF.busy=true;sfxs('dice');
+    const face=1+Math.floor(Math.random()*6),moves=(d.moves||[]).concat([face]),S=slState(moves);
+    const p={moves,turn:mc==='w'?'b':'w',status:S.winner?'done':'playing',result:S.winner||null,reason:S.winner?'home':null,ver:d.ver+1,drawOffer:null};
+    PF.data=Object.assign({},d,p);PF.ver=p.ver;PF.sl=S;PF.moveCount=moves.length;renderSL();
+    const L=S.last;if(L)sfxs(L.kind==='ladder'?'ladder':L.kind==='snake'?'snake':'step');
+    const ok=await patch(p);PF.busy=false;
+    if(!ok){PF.data=d;PF.ver=d.ver;PF.sl=slState(d.moves||[]);PF.moveCount=(d.moves||[]).length;renderSL();}
   }
 
   // ── actions ──
@@ -8266,9 +8344,9 @@ The child's messages follow.`;
     stopWatching(true);showPage('profile');
   }
   async function rematch(){
-    const d=PF.data;if(!d)return;const oppUid=d.host===PF.me?d.guest:d.host,nk=oppNick(d),mc=myColor(d);
+    const d=PF.data;if(!d)return;const oppUid=d.host===PF.me?d.guest:d.host,nk=oppNick(d),mc=myColor(d),gm=d.game;
     stopWatching(true);
-    GG.pfInvite(oppUid,nk,mc);
+    GG.pfInvite(oppUid,nk,mc,gm);
   }
   function click(sq){
     const d=PF.data,g=PF.chess;if(!d||!g||PF.busy||d.status!=='playing')return;
@@ -8307,7 +8385,7 @@ The child's messages follow.`;
     if(PF.invUnsub)return;
     try{
       const b=await GG.connect();if(!b||!b.watchInvites)return;PF.me=b.uid;
-      PF.invUnsub=b.watchInvites(list=>{PF.invites=(list||[]).filter(i=>i&&i.game==='chess'&&/^[A-Z0-9]{6}$/.test(i.room||'')&&(!tsMs(i.at)||Date.now()-tsMs(i.at)<INVITE_MS));paintInvites();});
+      PF.invUnsub=b.watchInvites(list=>{PF.invites=(list||[]).filter(i=>i&&(i.game==='chess'||i.game==='sl')&&/^[A-Z0-9]{6}$/.test(i.room||'')&&(!tsMs(i.at)||Date.now()-tsMs(i.at)<INVITE_MS));paintInvites();});
     }catch(e){console.warn('invites',e);}
   }
   async function paintInvites(){
@@ -8320,7 +8398,7 @@ The child's messages follow.`;
     PF.shownInvite=i.from+i.room;
     let nm='A friend';try{const b=await GG.connect();const r=await b.player(i.from);if(r&&r.nick)nm=nickOf(r.nick);}catch(e){}
     box.innerHTML='<b></b><div class="pf-btns" style="margin:0"></div>';
-    box.querySelector('b').textContent='♟️ '+nm+' invited you to play chess!';
+    box.querySelector('b').textContent=(i.game==='sl'?'🐍 ':'♟️ ')+nm+' invited you to play '+(i.game==='sl'?'Snake & Ladders':'chess')+'!';
     const bt=box.querySelector('.pf-btns');
     bt.appendChild(btn('Join the game','go',async()=>{box.hidden=true;const b=await GG.connect();if(b)b.dropInvite(i.from).catch(()=>{});window.GG_PENDING_ROOM=i.room;showPage('play-friend');}));
     bt.appendChild(btn('No thanks','',async()=>{box.hidden=true;const b=await GG.connect();if(b)b.dropInvite(i.from).catch(()=>{});}));
@@ -8332,10 +8410,17 @@ The child's messages follow.`;
 })();
 </script>
 
+<style>
+.pf-slsq{aspect-ratio:1;position:relative;background:#FFEBB3;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden;font-family:Nunito,sans-serif;}
+.pf-slsq.b{background:#FFF3D1;}.pf-slsq.last{background:#CFF3DC;outline:2px solid #1E9E5A;outline-offset:-2px;}.pf-slsq.goal{background:#FFD36B;}
+.pf-slsq i{font-style:normal;font-size:8px;font-weight:800;color:#585C78;line-height:1.2;padding-top:1px;}
+.pf-slsq u{text-decoration:none;font-size:8px;font-weight:800;color:#7a3b00;line-height:1;}
+.pf-slsq s{text-decoration:none;position:absolute;inset:auto 0 1px 0;text-align:center;font-size:13px;line-height:1;}
+</style>
 <script>
 // ══════════ PLAY NOW: with the computer, or with a friend ══════════
 (function(){
-  const G={sl:{name:'Snake & Ladders',page:'sl-game',online:false},chess:{name:'Chess',page:'chess',solo:true,online:true},uno:{name:'Uno',page:'uno-game',online:false},nm:{name:"Uno Show 'Em No Mercy",page:'uno-nomercy-game',online:false}};
+  const G={sl:{name:'Snake & Ladders',page:'sl-game',online:true,og:'sl'},chess:{name:'Chess',page:'chess',solo:true,online:true},uno:{name:'Uno',page:'uno-game',online:false},nm:{name:"Uno Show 'Em No Mercy",page:'uno-nomercy-game',online:false}};
   let box=null,last=null;
   function close(){if(box){box.remove();box=null;}if(last&&last.focus)try{last.focus();}catch(e){}}
   window.ggPlayChoose=function(k){
@@ -8349,7 +8434,7 @@ The child's messages follow.`;
       b.innerHTML='<span></span><small style="display:block;font-family:Nunito,sans-serif;font-weight:700;font-size:.82rem;opacity:.8"></small>';b.firstChild.textContent=txt;b.querySelector('small').textContent=sub;
       if(off){b.setAttribute('aria-disabled','true');}else b.onclick=()=>{close();fn();};return b;};
     const ai=mk('🤖 Play the computer','Practice on your own',()=>showPage(g.page,g.solo?true:undefined));
-    const fr=g.online?mk('👫 Play with a friend','Online, with someone on your friends list',()=>showPage('play-friend')):mk('👫 Play with a friend','Coming soon!',null,true);
+    const fr=g.online?mk('👫 Play with a friend','Online, with someone on your friends list',()=>{window.GG_PF_GAME=g.og||'chess';showPage('play-friend');}):mk('👫 Play with a friend','Coming soon!',null,true);
     const x=document.createElement('button');x.type='button';x.textContent='Cancel';x.style.cssText='margin-top:6px;min-height:44px;padding:8px 18px;border:none;background:none;color:inherit;font-weight:800;text-decoration:underline;cursor:pointer;';x.onclick=close;
     card.append(h,p,ai,fr,x);box.appendChild(card);box.addEventListener('click',e=>{if(e.target===box)close();});
     box.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
