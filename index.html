@@ -5888,6 +5888,29 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     </div>
   </div>
 </div>
+<div id="gg-chlogin" class="gg-modal" role="dialog" aria-modal="true" aria-labelledby="gg-ch-title" hidden>
+  <div class="gg-modal-card">
+    <h2 id="gg-ch-title">Change my login</h2>
+    <p>First type your <b>old</b> login name and password so we know it's you. Then fill in what you want to change.</p>
+    <div class="gg-login-fields">
+      <label for="gg-ch-oldname">Old login name</label>
+      <input id="gg-ch-oldname" type="text" maxlength="15" autocomplete="username" spellcheck="false">
+      <label for="gg-ch-oldpw">Old password</label>
+      <input id="gg-ch-oldpw" type="password" maxlength="40" autocomplete="current-password">
+      <label for="gg-ch-newname">New login name <small>(leave empty to keep it)</small></label>
+      <input id="gg-ch-newname" type="text" maxlength="15" autocomplete="off" spellcheck="false" placeholder="3 to 15 letters or numbers">
+      <label for="gg-ch-newpw">New password <small>(leave empty to keep it)</small></label>
+      <div class="gg-nick-row"><input id="gg-ch-newpw" type="password" maxlength="40" autocomplete="new-password" placeholder="At least 6 characters" onkeydown="if(event.key==='Enter')ggChangeGo()">
+      <button type="button" class="gg-dice-btn" id="gg-ch-eye" onclick="ggChangeEye()">👁️ Show</button></div>
+    </div>
+    <p class="gg-nick-hint">Pick something easy for you to remember but hard to guess. Don't use your real name. Grown-ups: please write the new password down.</p>
+    <p class="gg-nick-err" id="gg-ch-err" aria-live="polite"></p>
+    <div class="gg-modal-actions">
+      <button class="btn-amber" type="button" id="gg-ch-go" onclick="ggChangeGo()">Save changes</button>
+      <button class="gg-link-btn" type="button" onclick="ggChangeClose()">Cancel</button>
+    </div>
+  </div>
+</div>
 <div id="gg-toasts" class="gg-toasts" aria-live="polite"></div>
 <div id="gg-reward" class="rw" role="dialog" aria-modal="true" aria-label="Your rewards" hidden><div class="rw-card" aria-live="polite"></div></div>
 
@@ -7034,6 +7057,15 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
       // turn this guest into a real account (same player id, so nothing is lost)
       async signUp(name,pw){await authM.linkWithCredential(auth.currentUser,authM.EmailAuthProvider.credential(name.toLowerCase()+EMAIL,pw));},
       async logIn(name,pw){await authM.signInWithEmailAndPassword(auth,name.toLowerCase()+EMAIL,pw);},
+      // prove it's you with the OLD login name + password, then change the login name and/or the password
+      async changeLogin(oldName,oldPw,newName,newPw){
+        const u=auth.currentUser;
+        await authM.reauthenticateWithCredential(u,authM.EmailAuthProvider.credential(oldName.toLowerCase()+EMAIL,oldPw));
+        if(newName&&newName.toLowerCase()!==oldName.toLowerCase()){
+          try{await authM.updateEmail(u,newName.toLowerCase()+EMAIL);}catch(e){e.step='name';throw e;}
+        }
+        if(newPw){try{await authM.updatePassword(u,newPw);}catch(e){e.step='password';throw e;}}
+      },
       async logOut(){await authM.signOut(auth);await authM.signInAnonymously(auth);},
       async saveCloud(prof){await fs.setDoc(fs.doc(db,'saves',me()),{d:JSON.stringify(prof),at:fs.serverTimestamp()});},
       async loadCloud(){const s=await fs.getDoc(fs.doc(db,'saves',me()));if(!s.exists())return null;try{return JSON.parse(s.data().d);}catch(e){return null;}},
@@ -7631,7 +7663,7 @@ The child's messages follow.`;
     if(b.isGuest()){
       box.innerHTML='<p>Make a login to keep your coins and avatar safe and play on another phone or computer. No email needed.</p><div class="gg-code-btns"><button class="btn-amber" type="button" onclick="ggLoginOpen(\'signup\')">🔐 Create login</button><button class="gg-edit" type="button" onclick="ggLoginOpen(\'login\')">I already have one</button></div>';
     }else{
-      box.innerHTML='<p>Logged in as <span class="gg-acct-name">'+esc(b.loginName())+'</span>. Your progress is saved online.</p><div class="gg-code-btns"><button class="gg-edit" type="button" onclick="ggLogOut()">🚪 Log out</button></div>';
+      box.innerHTML='<p>Logged in as <span class="gg-acct-name">'+esc(b.loginName())+'</span>. Your progress is saved online.</p><div class="gg-code-btns"><button class="gg-edit" type="button" onclick="ggChangeOpen()">✏️ Change login</button><button class="gg-edit" type="button" onclick="ggLogOut()">🚪 Log out</button></div>';
     }
   }
 
@@ -7675,6 +7707,45 @@ The child's messages follow.`;
       GG.syncNow();A.friendRows=null;GG.renderProfile();
     }catch(e){console.warn('login',e);err.textContent=errText(e);if(A.mode==='login')GG.syncNow();}
     A.busy=false;$('gg-login-go').disabled=false;
+  };
+  // ── change my login (needs the old login name + password first) ──
+  window.ggChangeOpen=async function(){
+    const b=await GG.connect();if(!b||b.isGuest())return;
+    ['gg-ch-oldname','gg-ch-oldpw','gg-ch-newname','gg-ch-newpw'].forEach(i=>$(i).value='');
+    $('gg-ch-newpw').type='password';$('gg-ch-eye').textContent='👁️ Show';$('gg-ch-err').textContent='';
+    $('gg-chlogin').hidden=false;setTimeout(()=>$('gg-ch-oldname').focus(),40);
+  };
+  window.ggChangeClose=function(){$('gg-chlogin').hidden=true;};
+  window.ggChangeEye=function(){const i=$('gg-ch-newpw'),show=i.type==='password';i.type=show?'text':'password';$('gg-ch-eye').textContent=show?'🙈 Hide':'👁️ Show';};
+  window.ggChangeGo=async function(){
+    if(A.busy)return;
+    const oldName=$('gg-ch-oldname').value.trim(),oldPw=$('gg-ch-oldpw').value,newName=$('gg-ch-newname').value.trim(),newPw=$('gg-ch-newpw').value,err=$('gg-ch-err');
+    if(!oldName||!oldPw){err.textContent='Type your old login name and old password first.';return;}
+    if(!newName&&!newPw){err.textContent='Type a new login name, a new password, or both.';return;}
+    if(newName){
+      if(!NAME_RX.test(newName)){err.textContent='New login name must be 3 to 15 letters or numbers (no spaces).';return;}
+      if(GG.validNick&&!GG.validNick(newName).ok){err.textContent='Please pick a different login name.';return;}
+    }
+    if(newPw&&newPw.length<6){err.textContent='New password needs at least 6 characters.';return;}
+    if(newPw&&newPw===oldPw&&(!newName||newName.toLowerCase()===oldName.toLowerCase())){err.textContent='That is the same as your old password.';return;}
+    const b=await GG.connect();if(!b){err.textContent='No internet right now. Try again when you are online.';return;}
+    A.busy=true;$('gg-ch-go').disabled=true;err.textContent='Checking…';
+    try{
+      await b.changeLogin(oldName,oldPw,newName,newPw);
+      try{await b.saveCloud(GG.exportProfile());}catch(e){}
+      ggChangeClose();if(window.sfx)sfx('success');
+      GG.toast&&GG.toast('✅','Your login was changed. Write it down!','info');
+      renderAcct();
+    }catch(e){
+      console.warn('change login',e);const c=(e&&e.code)||'';
+      if(c.includes('user-mismatch'))err.textContent='That is not the login name you are logged in with.';
+      else if(c.includes('requires-recent-login'))err.textContent='For safety, please log out, log in again, then try once more.';
+      else if(e&&e.step==='name'&&(c.includes('operation-not-allowed')||c.includes('admin-restricted')))err.textContent='This site can\'t change login names yet. You can still change your password: empty the new name box and try again.';
+      else if(e&&e.step==='name'&&c.includes('email-already-in-use'))err.textContent='That login name is taken. Try another one.';
+      else if(e&&e.step==='password')err.textContent=(newName?'Your login name changed, but the password did not. ':'')+errText(e);
+      else err.textContent=errText(e);
+    }
+    A.busy=false;$('gg-ch-go').disabled=false;
   };
   window.ggLogOut=async function(){
     const b=await GG.connect();if(!b)return;
