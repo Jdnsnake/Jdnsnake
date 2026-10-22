@@ -7846,6 +7846,9 @@ The child's messages follow.`;
     cnt.textContent=d.fr.length?d.fr.length+' of 50':'';
     // requests
     reqs.innerHTML='';
+    if(!GG.hasNick()){const n=document.createElement('p');n.className='gg-fr-empty';n.style.fontWeight='700';
+      n.innerHTML='👋 Pick a nickname first. Friends can only find you, and see your requests, once you have one. ';
+      const bt=document.createElement('button');bt.type='button';bt.className='gg-fr-btn yes';bt.textContent='Pick a nickname';bt.onclick=()=>GG.needNick(()=>renderFriends());n.appendChild(bt);reqs.appendChild(n);}
     if(d.incoming.length){
       const h=document.createElement('div');h.className='gg-fr-sub';h.textContent='📬 Friend requests ('+d.incoming.length+')';reqs.appendChild(h);
       d.incoming.forEach(r=>reqs.appendChild(mkRow(r,'wants to be your friend',[
@@ -7877,11 +7880,12 @@ The child's messages follow.`;
     const code=inp.value.trim().toUpperCase().replace(/\s+/g,'');
     if(!GG.friendCodeRx.test(code)){msg.textContent='A friend code looks like FOX-7KQ.';return;}
     if(code===P.friendCode){msg.textContent='That\'s your own code! 😄';return;}
+    if(!GG.hasNick()){msg.textContent='Pick a nickname first, so your friend can see who the request is from.';GG.needNick(()=>renderFriends());return;}
     const b=await GG.connect();if(!b){msg.textContent='Sending a request needs the internet.';return;}
     msg.textContent='Looking for that player…';
     try{
       const uid=await b.findCode(code);
-      if(!uid||uid===b.uid){msg.textContent='No player has that code. Check the letters and try again.';return;}
+      if(!uid||uid===b.uid){msg.textContent='No player has that code yet. Check the letters. If it is right, ask your friend to pick a nickname on GamesGo and open it online first.';return;}
       const [fr,inc,out]=await Promise.all([b.friendIds(),b.inboxIds(),b.outboxIds()]);
       if(fr.includes(uid)){msg.textContent='You are already friends!';return;}
       if(out.includes(uid)){msg.textContent='You already sent a request. Now they need to accept it.';return;}
