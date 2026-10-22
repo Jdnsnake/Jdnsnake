@@ -347,7 +347,7 @@
       <button id="nav-back-btn" class="nav-back" onclick="showPage('home')" style="display:none;">
         ← All Games
       </button>
-      <button id="gg-chip" class="gg-chip" onclick="showPage('profile')" aria-label="My profile and coins"><span class="gg-chip-av" id="gg-chip-av"></span><span class="gg-chip-name" id="gg-chip-name">Player</span><span class="gg-chip-lvl" id="gg-chip-lvl">Lv 1</span><span class="gg-chip-coins">🪙 <b id="gg-chip-coins">0</b></span></button>
+      <button id="gg-chip" class="gg-chip" onclick="showPage('profile')" aria-label="My profile and coins"><span class="gg-chip-av" id="gg-chip-av"></span><span class="gg-chip-dot" id="gg-chip-dot" hidden aria-hidden="true"></span><span class="gg-chip-name" id="gg-chip-name">Player</span><span class="gg-chip-lvl" id="gg-chip-lvl">Lv 1</span><span class="gg-chip-coins">🪙 <b id="gg-chip-coins">0</b></span></button>
       <button id="nav-menu-btn" class="nav-menu-btn" onclick="toggleNavMenu()" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">☰</button>
       <button id="sound-toggle" class="sound-toggle" onclick="toggleSound()" aria-label="Mute sound effects" title="Sound on — click to mute">🔊</button>
     </div>
@@ -5647,7 +5647,8 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   .gg-fr-add{display:flex;gap:8px;flex-wrap:wrap;}
   .gg-fr-add input{flex:1 1 160px;min-width:0;font:inherit;font-size:1.05rem;padding:10px 14px;border-radius:14px;border:2px solid var(--border);background:var(--bg);color:var(--ink);text-transform:uppercase;letter-spacing:.06em;}
   .gg-fr-add input:focus{outline:none;border-color:var(--teal-mid);box-shadow:0 0 0 3px var(--teal-light);}
-  .gg-fr-add .btn-amber{padding:10px 20px;font-size:.95rem;}
+  .gg-fr-add .btn-amber{padding:10px 20px;font-size:.95rem;min-height:44px;}
+  .gg-fr-add input{min-height:44px;}
   .gg-fr-row{display:flex;align-items:center;gap:12px;padding:10px 4px;border-top:1px solid var(--teal-pale);}
   .gg-fr-row .rk{font-family:'Fredoka',sans-serif;font-weight:700;width:28px;text-align:center;color:var(--muted);}
   .gg-fr-row .av-wrap{width:44px;height:44px;flex:none;}
@@ -5657,6 +5658,18 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
   .gg-fr-row.me{background:var(--teal-pale);border-radius:14px;}
   .gg-fr-x{flex:none;width:36px;height:36px;border-radius:999px;border:2px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-weight:700;}
   .gg-fr-empty{color:var(--muted);font-size:.92rem;margin:10px 0 2px;}
+  .gg-fr-sub{font-family:'Fredoka',sans-serif;font-weight:600;color:var(--ink);font-size:.95rem;margin:14px 0 2px;}
+  .gg-fr-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+  .gg-fr-btn{min-height:44px;padding:0 14px;border-radius:999px;border:2px solid var(--border);background:#fff;color:var(--ink);font-family:'Fredoka',sans-serif;font-weight:600;font-size:.9rem;cursor:pointer;}
+  .gg-fr-btn.yes{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .gg-fr-btn.soft{color:var(--muted);font-weight:500;}
+  .gg-fr-x{min-width:44px;min-height:44px;}
+  .gg-on{display:inline-block;width:10px;height:10px;border-radius:50%;background:#22C55E;margin-right:6px;box-shadow:0 0 0 2px #DCFCE7;vertical-align:middle;}
+  .gg-off{display:inline-block;width:10px;height:10px;border-radius:50%;background:#CBD5E1;margin-right:6px;vertical-align:middle;}
+  .gg-chip{position:relative;}
+  .gg-chip-dot{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:999px;background:#DC2626;color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #fff;}
+  .gg-chip-dot[hidden]{display:none;}
+  @media(max-width:520px){.gg-fr-row{flex-wrap:wrap;}.gg-fr-acts{flex-basis:100%;justify-content:flex-start;}}
   .gg-code-msg{flex-basis:100%;margin:0;font-weight:700;color:var(--teal-dark);font-size:.9rem;min-height:1.2em;}
   .gg-h2 small{font-family:'Nunito',sans-serif;font-weight:700;font-size:.85rem;color:var(--muted);margin-left:8px;}
   .gg-edit,.gg-danger,.gg-dice-btn,.shop-tool,.shop-look,.lb-tab,.help-back,.help-read{min-height:44px;}
@@ -5809,9 +5822,10 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
       <div class="gg-fr-add">
         <label for="gg-fr-input" class="sr-only">Friend code</label>
         <input id="gg-fr-input" type="text" maxlength="7" autocomplete="off" spellcheck="false" placeholder="e.g. FOX-7KQ" onkeydown="if(event.key==='Enter')ggAddFriend()">
-        <button class="btn-amber" type="button" onclick="ggAddFriend()">➕ Add friend</button>
+        <button class="btn-amber" type="button" onclick="ggAddFriend()">➕ Send request</button>
       </div>
       <p class="gg-code-msg" id="gg-fr-msg" aria-live="polite"></p>
+      <div id="gg-fr-reqs"></div>
       <div id="gg-fr-list"></div>
     </div>
 
@@ -7076,6 +7090,22 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
         if(s.exists())return s.data().uid===me();await fs.setDoc(ref,{uid:me()});return true;},
       async findCode(code){const s=await fs.getDoc(fs.doc(db,'codes',code));return s.exists()?s.data().uid:null;},
       async player(id){const s=await fs.getDoc(fs.doc(db,'players',id));return s.exists()?s.data():null;},
+      async rowOf(id,period,weekId){const s=await fs.getDoc(period==='week'?fs.doc(db,'weeks',weekId,'players',id):fs.doc(db,'players',id));return s.exists()?Object.assign({id},s.data()):null;},
+      // ── friends: both people must agree (request → accept) ──
+      async friendIds(){const s=await fs.getDocs(fs.collection(db,'friendsOf',me(),'list'));return s.docs.map(d=>d.id);},
+      async inboxIds(){const s=await fs.getDocs(fs.collection(db,'inbox',me(),'from'));return s.docs.map(d=>d.id);},
+      async outboxIds(){const s=await fs.getDocs(fs.collection(db,'outbox',me(),'to'));return s.docs.map(d=>d.id);},
+      async sendRequest(to){const w=fs.writeBatch(db),at=fs.serverTimestamp();
+        w.set(fs.doc(db,'inbox',to,'from',me()),{at});w.set(fs.doc(db,'outbox',me(),'to',to),{at});await w.commit();},
+      async cancelRequest(to){const w=fs.writeBatch(db);w.delete(fs.doc(db,'outbox',me(),'to',to));w.delete(fs.doc(db,'inbox',to,'from',me()));await w.commit();},
+      async declineRequest(from){const w=fs.writeBatch(db);w.delete(fs.doc(db,'inbox',me(),'from',from));w.delete(fs.doc(db,'outbox',from,'to',me()));await w.commit();},
+      async acceptRequest(from){const w=fs.writeBatch(db),at=fs.serverTimestamp();
+        w.set(fs.doc(db,'friendsOf',me(),'list',from),{at});w.set(fs.doc(db,'friendsOf',from,'list',me()),{at});
+        w.delete(fs.doc(db,'inbox',me(),'from',from));w.delete(fs.doc(db,'outbox',from,'to',me()));await w.commit();},
+      async removeFriend(uid){const w=fs.writeBatch(db);w.delete(fs.doc(db,'friendsOf',me(),'list',uid));w.delete(fs.doc(db,'friendsOf',uid,'list',me()));await w.commit();},
+      async blockUser(uid){const w=fs.writeBatch(db);w.set(fs.doc(db,'blocks',me(),'list',uid),{at:fs.serverTimestamp()});
+        w.delete(fs.doc(db,'friendsOf',me(),'list',uid));w.delete(fs.doc(db,'friendsOf',uid,'list',me()));
+        w.delete(fs.doc(db,'inbox',me(),'from',uid));w.delete(fs.doc(db,'outbox',uid,'to',me()));await w.commit();},
       async save(r){
         const ts=fs.serverTimestamp(),uid=me();
         await fs.setDoc(fs.doc(db,'players',uid),Object.assign({},r.all,{lastSeen:ts}));
@@ -7760,57 +7790,118 @@ The child's messages follow.`;
     GG.renderProfile();
   };
 
-  // ── friends ──
-  async function loadFriends(){
-    const P=GG.profile(),b=await GG.connect();if(!b)return null;
-    const rows=await Promise.all(P.friends.map(f=>b.player(f.uid).then(d=>d?Object.assign({uid:f.uid},d):null).catch(()=>null)));
-    return rows.filter(Boolean);
+  // ── friends: you send a request, the other player has to accept ──
+  const ONLINE_MS=8*60*1000;
+  const tsMs=v=>v&&typeof v.toMillis==='function'?v.toMillis():(typeof v==='number'?v:0);
+  const fallbackRow=id=>({uid:id,nick:'Player',look:{}});
+  const rowsFor=(b,ids)=>Promise.all(ids.map(id=>b.player(id).then(d=>d?Object.assign({uid:id},d):fallbackRow(id)).catch(()=>fallbackRow(id))));
+  async function fetchFriends(){
+    const b=await GG.connect();if(!b)return null;
+    const [fr,inc,out]=await Promise.all([b.friendIds(),b.inboxIds(),b.outboxIds()]);
+    const P=GG.profile();
+    // keep the saved list in step with the real, two-way one
+    const same=P.friends.length===fr.length&&fr.every(id=>P.friends.some(f=>f.uid===id));
+    if(!same){P.friends=fr.slice(0,50).map(id=>({uid:id,code:(P.friends.find(f=>f.uid===id)||{}).code||''}));GG.save();GG.checkAch();}
+    A.inboxCount=inc.length;paintBadge();
+    const [friends,incoming,outgoing]=await Promise.all([rowsFor(b,fr),rowsFor(b,inc),rowsFor(b,out)]);
+    return {fr,inc,out,friends,incoming,outgoing};
   }
+  function paintBadge(){
+    const d=$('gg-chip-dot');if(!d)return;const n=A.inboxCount|0;
+    d.hidden=!n;d.textContent=n>9?'9+':String(n);
+    const chip=$('gg-chip');if(chip){const base=(chip.getAttribute('aria-label')||'').replace(/ \(\d+ friend request.*$/,'');chip.setAttribute('aria-label',n?base+' ('+n+' friend request'+(n>1?'s':'')+')':base);}
+  }
+  function mkRow(r,subText,acts,opts){
+    const row=document.createElement('div');row.className='gg-fr-row'+(opts&&opts.me?' me':'');
+    row.innerHTML='<span class="av-wrap"></span><span class="nm"><b></b><span></span></span><span class="gg-fr-acts"></span>';
+    row.querySelector('.av-wrap').appendChild(window.renderAvatar(r.look||{},44,{still:true}));
+    const nm=GG.validNick&&GG.validNick(r.nick).ok?r.nick:'Player';
+    row.querySelector('b').textContent=nm+(opts&&opts.me?' (you)':'');
+    const sub=row.querySelector('.nm span');
+    if(opts&&opts.dot!==undefined){const d=document.createElement('span');d.className=opts.dot?'gg-on':'gg-off';d.setAttribute('role','img');d.setAttribute('aria-label',opts.dot?'Online now':'Offline');sub.appendChild(d);}
+    sub.appendChild(document.createTextNode(subText));
+    const box=row.querySelector('.gg-fr-acts');
+    (acts||[]).forEach(a=>{const x=document.createElement('button');x.type='button';x.className='gg-fr-btn '+(a.cls||'');x.textContent=a.label;x.setAttribute('aria-label',a.aria||a.label);x.onclick=a.fn;box.appendChild(x);});
+    return row;
+  }
+  const lvlText=r=>'Level '+((r.level|0)||1)+' · 🪙 '+(r.coins|0).toLocaleString('en-US')+' earned';
+  async function frDo(fn,okMsg){
+    const msg=$('gg-fr-msg');
+    try{const b=await GG.connect();if(!b)throw new Error('offline');await fn(b);if(okMsg)msg.textContent=okMsg;}
+    catch(e){console.warn('friends',e);msg.textContent='That did not work. Check your internet and try again.';}
+    renderFriends();
+  }
+  let frTicket=0;
   async function renderFriends(){
-    const list=$('gg-fr-list'),cnt=$('gg-fr-count');if(!list)return;
+    const list=$('gg-fr-list'),reqs=$('gg-fr-reqs'),cnt=$('gg-fr-count');if(!list)return;
     const P=GG.profile();
     if(window.GG_PENDING_FRIEND){$('gg-fr-input').value=window.GG_PENDING_FRIEND;window.GG_PENDING_FRIEND=null;
-      $('gg-fr-msg').textContent='Press "Add friend" to add this player.';setTimeout(()=>{const i=$('gg-fr-input');i&&i.scrollIntoView({block:'center',behavior:'smooth'});},300);}
-    cnt.textContent=P.friends.length?P.friends.length+' of 50':'';
-    if(!hasCfg()){list.innerHTML='<p class="gg-fr-empty">Friends need the online leaderboard to be switched on.</p>';return;}
-    if(!P.friends.length){list.innerHTML='<p class="gg-fr-empty">No friends yet. Ask a friend for their code and type it above. Friends can only see your nickname, avatar and scores.</p>';return;}
-    if(!A.friendRows){list.innerHTML='<p class="gg-fr-empty">Loading friends…</p>';try{A.friendRows=await loadFriends();}catch(e){A.friendRows=null;}}
-    if(!A.friendRows){list.innerHTML='<p class="gg-fr-empty">Can\'t load friends right now. Check your internet.</p>';return;}
-    const me={uid:'me',nick:P.nick||'You',look:GG.look(),level:GG.level().lvl,coins:P.earned,me:true};
-    const all=A.friendRows.concat([me]).sort((a,b)=>(b.coins|0)-(a.coins|0));
+      $('gg-fr-msg').textContent='Press "Send request" to ask this player to be your friend.';setTimeout(()=>{const i=$('gg-fr-input');i&&i.scrollIntoView({block:'center',behavior:'smooth'});},300);}
+    if(!hasCfg()){cnt.textContent='';reqs.innerHTML='';list.innerHTML='<p class="gg-fr-empty">Friends need the online leaderboard to be switched on.</p>';return;}
+    const t=++frTicket;
+    if(!list.children.length)list.innerHTML='<p class="gg-fr-empty">Loading friends…</p>';
+    let d=null;try{d=await fetchFriends();}catch(e){console.warn('friends load',e);}
+    if(t!==frTicket)return;
+    if(!d){reqs.innerHTML='';list.innerHTML='<p class="gg-fr-empty">Can\'t load friends right now. Check your internet.</p>';return;}
+    cnt.textContent=d.fr.length?d.fr.length+' of 50':'';
+    // requests
+    reqs.innerHTML='';
+    if(d.incoming.length){
+      const h=document.createElement('div');h.className='gg-fr-sub';h.textContent='📬 Friend requests ('+d.incoming.length+')';reqs.appendChild(h);
+      d.incoming.forEach(r=>reqs.appendChild(mkRow(r,'wants to be your friend',[
+        {label:'✅ Accept',cls:'yes',aria:'Accept friend request from '+(r.nick||'player'),fn:()=>{if(d.fr.length>=50){$('gg-fr-msg').textContent='You have 50 friends. Remove one first.';return;}frDo(b=>b.acceptRequest(r.uid),'🎉 You and '+(r.nick||'your friend')+' are friends now!');if(window.sfx)sfx('success');}},
+        {label:'Not now',cls:'soft',aria:'Decline request from '+(r.nick||'player'),fn:()=>frDo(b=>b.declineRequest(r.uid),'Request removed.')},
+        {label:'🚫 Block',cls:'soft',aria:'Block '+(r.nick||'player'),fn:()=>{if(confirm('Block '+(r.nick||'this player')+'? They will not be able to send you requests.'))frDo(b=>b.blockUser(r.uid),'Blocked.');}}])));
+    }
+    if(d.outgoing.length){
+      const h=document.createElement('div');h.className='gg-fr-sub';h.textContent='⏳ Waiting for an answer';reqs.appendChild(h);
+      d.outgoing.forEach(r=>reqs.appendChild(mkRow(r,'has not answered yet',[{label:'Cancel request',cls:'soft',aria:'Cancel request to '+(r.nick||'player'),fn:()=>frDo(b=>b.cancelRequest(r.uid),'Request cancelled.')}])));
+    }
+    // friends (with you in the ranking)
     list.innerHTML='';
+    if(!d.friends.length){list.innerHTML='<p class="gg-fr-empty">No friends yet. Ask a friend for their code, type it above and send a request. They have to accept it on their own Friends page.</p>';return;}
+    const me=Object.assign({uid:'me',nick:P.nick||'You',look:GG.look(),level:GG.level().lvl,coins:P.earned},{});
+    const now=Date.now();
+    const all=d.friends.map(r=>Object.assign({},r,{online:now-tsMs(r.lastSeen)<ONLINE_MS})).concat([Object.assign(me,{me:true})]).sort((x,y)=>(y.coins|0)-(x.coins|0));
     all.forEach((r,i)=>{
-      const row=document.createElement('div');row.className='gg-fr-row'+(r.me?' me':'');
-      row.innerHTML='<span class="rk">'+(i<3?['🥇','🥈','🥉'][i]:i+1)+'</span><span class="av-wrap"></span><span class="nm"><b></b><span></span></span>';
-      row.querySelector('.av-wrap').appendChild(window.renderAvatar(r.look||{},44,{still:true}));
-      row.querySelector('b').textContent=(r.nick||'Player')+(r.me?' (you)':'');
-      row.querySelector('.nm span').textContent='Level '+(r.level|0||1)+' · 🪙 '+(r.coins|0).toLocaleString('en-US')+' earned';
-      if(!r.me){const x=document.createElement('button');x.type='button';x.className='gg-fr-x';x.textContent='✕';x.setAttribute('aria-label','Remove '+(r.nick||'friend'));x.onclick=()=>removeFriend(r.uid,r.nick);row.appendChild(x);}
+      const acts=r.me?[]:[
+        {label:'Remove',cls:'soft',aria:'Remove '+(r.nick||'friend'),fn:()=>{if(confirm('Remove '+(r.nick||'this friend')+' from your friends?'))frDo(b=>b.removeFriend(r.uid),'Friend removed.');}},
+        {label:'🚫 Block',cls:'soft',aria:'Block '+(r.nick||'friend'),fn:()=>{if(confirm('Block '+(r.nick||'this player')+'? They will be removed from your friends and cannot send requests.'))frDo(b=>b.blockUser(r.uid),'Blocked.');}}];
+      const row=mkRow(r,(r.me?'':(r.online?'Online · ':'Offline · '))+lvlText(r),acts,r.me?{me:true}:{dot:r.online});
+      const rk=document.createElement('span');rk.className='rk';rk.textContent=i<3?['🥇','🥈','🥉'][i]:String(i+1);row.insertBefore(rk,row.firstChild);
       list.appendChild(row);
     });
-  }
-  function removeFriend(uid,nick){
-    if(!confirm('Remove '+(nick||'this friend')+' from your friends?'))return;
-    const P=GG.profile();P.friends=P.friends.filter(f=>f.uid!==uid);GG.save();A.friendRows=A.friendRows&&A.friendRows.filter(r=>r.uid!==uid);renderFriends();
   }
   window.ggAddFriend=async function(){
     const inp=$('gg-fr-input'),msg=$('gg-fr-msg'),P=GG.profile();
     const code=inp.value.trim().toUpperCase().replace(/\s+/g,'');
     if(!GG.friendCodeRx.test(code)){msg.textContent='A friend code looks like FOX-7KQ.';return;}
     if(code===P.friendCode){msg.textContent='That\'s your own code! 😄';return;}
-    if(P.friends.length>=50){msg.textContent='You have 50 friends. Remove one to add another.';return;}
-    const b=await GG.connect();if(!b){msg.textContent='Adding friends needs the internet.';return;}
+    const b=await GG.connect();if(!b){msg.textContent='Sending a request needs the internet.';return;}
     msg.textContent='Looking for that player…';
     try{
       const uid=await b.findCode(code);
       if(!uid||uid===b.uid){msg.textContent='No player has that code. Check the letters and try again.';return;}
-      if(P.friends.some(f=>f.uid===uid)){msg.textContent='You are already friends!';return;}
-      const row=await b.player(uid);
-      P.friends.push({uid,code});GG.save();GG.checkAch();
-      inp.value='';msg.textContent='🎉 '+(row&&row.nick?row.nick:'Your friend')+' is now your friend!';if(window.sfx)sfx('success');
-      A.friendRows=null;renderFriends();GG.paint();
-    }catch(e){console.warn('add friend',e);msg.textContent='Could not add a friend right now. Try again soon.';}
+      const [fr,inc,out]=await Promise.all([b.friendIds(),b.inboxIds(),b.outboxIds()]);
+      if(fr.includes(uid)){msg.textContent='You are already friends!';return;}
+      if(out.includes(uid)){msg.textContent='You already sent a request. Now they need to accept it.';return;}
+      if(fr.length>=50){msg.textContent='You have 50 friends. Remove one to add another.';return;}
+      const row=await b.player(uid),nm=row&&row.nick?row.nick:'that player';
+      if(inc.includes(uid)){await b.acceptRequest(uid);inp.value='';msg.textContent='🎉 '+nm+' had already asked you, so you are friends now!';if(window.sfx)sfx('success');renderFriends();return;}
+      try{await b.sendRequest(uid);}catch(e){console.warn('request',e);msg.textContent='That player is not taking friend requests right now.';return;}
+      inp.value='';msg.textContent='📨 Request sent to '+nm+'. They need to accept it on their Friends page.';if(window.sfx)sfx('success');
+      renderFriends();
+    }catch(e){console.warn('add friend',e);msg.textContent='Could not send the request right now. Try again soon.';}
   };
+
+  // ── new requests show as a red number on your profile button; friends see you as "online" while you play ──
+  async function poll(){
+    if(document.hidden||!GG.online||!GG.online())return;
+    try{const b=await GG.connect();if(!b)return;const inc=await b.inboxIds();const was=A.inboxCount|0;A.inboxCount=inc.length;paintBadge();
+      if(inc.length!==was&&$('page-profile')&&$('page-profile').classList.contains('active'))renderFriends();}catch(e){}
+  }
+  setTimeout(poll,5000);setInterval(poll,45000);
+  setInterval(()=>{if(!document.hidden&&GG.online&&GG.online()&&GG.profile().friends.length&&GG.syncNow)GG.syncNow();},5*60*1000);
 
   const orig=GG.renderProfile;
   GG.renderProfile=function(){orig();renderAcct();renderFriends();};
