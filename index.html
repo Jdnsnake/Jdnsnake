@@ -7091,7 +7091,8 @@ function nmNextStep(){if(nmCur<nmSteps.length-1)nmStep(nmCur+1);else{cancelAnima
     <div id="pf-room" hidden>
       <div class="pf-bar" id="pf-top"></div>
       <div class="ch-game-wrap">
-        <div>
+        <div id="pf-uno" hidden></div>
+        <div id="pf-chboard">
           <div style="display:grid;grid-template-columns:18px 1fr;">
             <div class="ch-rank-labels" id="pf-rank-labels"></div>
             <div class="ch-board-grid" id="pf-board"></div>
@@ -8024,6 +8025,7 @@ The child's messages follow.`;
   const GLYPH={K:'♚',Q:'♛',R:'♜',B:'♝',N:'♞',P:'♟'};
   const REACTS=['👍','😮','😂','👏','😢','❤️'];
   const REACT_TEXT=['Nice!','Wow!','Haha!','Good game!','Oh no!','Love it!'];
+  const GI={chess:{n:'chess',t:'Play chess online',i:'♟️',b:'♟️ Invite'},sl:{n:'Snake & Ladders',t:'Play Snake & Ladders online',i:'🐍',b:'🐍 Invite'},uno:{n:'Uno',t:'Play Uno online',i:'🎴',b:'🎴 Invite'},nm:{n:"Uno Show 'Em No Mercy",t:"Play Uno Show 'Em No Mercy online",i:'💀',b:'💀 Invite'}};
   const SL_SN={17:7,54:34,62:19,87:24,99:78},SL_LAD={4:14,9:31,28:84,40:59,51:67};
   // Snake & Ladders: the whole game is the list of dice rolls. Both screens replay it, so they always agree.
   function slState(rolls){
@@ -8037,7 +8039,7 @@ The child's messages follow.`;
     return {pos,last,winner};
   }
   const AWAY_MS=60000, INVITE_MS=20*60*1000, HB_MS=25000;
-  const PF={lobbyGame:'chess',sl:null,id:null,data:null,chess:null,unsub:null,hb:null,tick:null,sel:null,legal:[],busy:false,flip:false,lastReact:0,looks:{},ver:-1,moveCount:0,invites:[],invUnsub:null,shownInvite:null,endSounded:false,joining:false};
+  const PF={lobbyGame:'chess',sl:null,uo:null,pick:null,id:null,data:null,chess:null,unsub:null,hb:null,tick:null,sel:null,legal:[],busy:false,flip:false,lastReact:0,looks:{},ver:-1,moveCount:0,invites:[],invUnsub:null,shownInvite:null,endSounded:false,joining:false};
   const tsMs=v=>v&&typeof v.toMillis==='function'?v.toMillis():(typeof v==='number'?v:0);
   const nickOf=n=>{const v=GG.validNick&&GG.validNick(n);return v&&v.ok?v.nick:'Player';};
   const sfxs=n=>{try{if(window.sfx)sfx(n);}catch(e){}};
@@ -8051,7 +8053,7 @@ The child's messages follow.`;
   // ── routing helpers ──
   GG.pfOpen=async function(){
     const want=(window.GG_PENDING_ROOM||'').toUpperCase();window.GG_PENDING_ROOM=null;
-    PF.lobbyGame=window.GG_PF_GAME==='sl'?'sl':'chess';window.GG_PF_GAME=null;
+    PF.lobbyGame=GI[window.GG_PF_GAME]?window.GG_PF_GAME:'chess';window.GG_PF_GAME=null;
     const ok=await new Promise(res=>GG.needNick(()=>res(true)));
     if(!ok)return;
     if(want){joinRoom(want);return;}
@@ -8061,7 +8063,7 @@ The child's messages follow.`;
   GG.pfLeave=function(){stopWatching(false);};
   function showLobby(){
     $('pf-lobby').hidden=false;$('pf-room').hidden=true;
-    $('pf-lobby').querySelector('h1').textContent=PF.lobbyGame==='sl'?'Play Snake & Ladders online':'Play chess online';
+    $('pf-lobby').querySelector('h1').textContent=GI[PF.lobbyGame].t;
     $('pf-lobby-msg').textContent='';
     const rid=saved();$('pf-resume').hidden=!rid;
     renderLobbyFriends();
@@ -8088,7 +8090,7 @@ The child's messages follow.`;
         row.querySelector('b').textContent=nickOf(r.nick);
         const on=Date.now()-tsMs(r.lastSeen)<8*60*1000;
         const sub=row.querySelector('.nm span');const d=document.createElement('span');d.className=on?'gg-on':'gg-off';sub.appendChild(d);sub.appendChild(document.createTextNode(on?'Online':'Offline'));
-        const bt=document.createElement('button');bt.type='button';bt.className='gg-fr-btn yes';bt.textContent=PF.lobbyGame==='sl'?'🐍 Invite':'♟️ Invite';bt.setAttribute('aria-label','Invite '+nickOf(r.nick)+' to play '+(PF.lobbyGame==='sl'?'Snake and Ladders':'chess'));
+        const bt=document.createElement('button');bt.type='button';bt.className='gg-fr-btn yes';bt.textContent=GI[PF.lobbyGame].b;bt.setAttribute('aria-label','Invite '+nickOf(r.nick)+' to play '+GI[PF.lobbyGame].n);
         bt.onclick=()=>GG.pfInvite(r.uid,nickOf(r.nick),undefined,PF.lobbyGame);row.querySelector('.gg-fr-acts').appendChild(bt);box.appendChild(row);
       });
     }catch(e){console.warn('lobby',e);box.innerHTML='<p class="gg-fr-empty">Can\'t load friends right now.</p>';}
@@ -8096,14 +8098,14 @@ The child's messages follow.`;
 
   // ── create / join ──
   GG.pfInvite=async function(friendUid,friendNick,swapFrom,game){
-    game=game==='sl'?'sl':'chess';
+    game=GI[game]?game:'chess';
     if(game==='chess'&&!hasLib()){alert('The chess engine could not load. Check your internet and reload.');return;}
     GG.needNick(async()=>{
       const b=await GG.connect();if(!b){alert('Playing online needs the internet.');return;}
       PF.me=b.uid;const id=newId();
       const hostColor=swapFrom?(swapFrom==='w'?'b':'w'):(Math.random()<0.5?'w':'b');
       const start=game==='chess'?new Chess().fen():'';
-      const data={game,host:b.uid,guest:null,hostNick:GG.profile().nick,guestNick:null,hostColor,fen:start,moves:[],turn:'w',status:'waiting',result:null,reason:null,ver:0,drawOffer:null,react:null,hbH:null,hbG:null};
+      const data={game,st:(game==='uno'||game==='nm')?JSON.stringify(uoNew(game)):'',host:b.uid,guest:null,hostNick:GG.profile().nick,guestNick:null,hostColor,fen:start,moves:[],turn:'w',status:'waiting',result:null,reason:null,ver:0,drawOffer:null,react:null,hbH:null,hbG:null};
       try{
         await b.createRoom(id,data);
         if(friendUid)await b.sendInvite(friendUid,id,game);
@@ -8124,7 +8126,7 @@ The child's messages follow.`;
         try{await b.patchRoom(id,{guest:b.uid,guestNick:GG.profile().nick,status:'playing',ver:1});}
         catch(e){console.warn('join',e);toLobby('Could not join that game. It may have just filled up.');return;}
       }
-      PF.id=id;PF.data=null;PF.chess=null;PF.sl=null;PF.ver=-1;PF.moveCount=-1;PF.sel=null;PF.legal=[];PF.endSounded=false;PF.lastReact=0;
+      PF.id=id;PF.data=null;PF.chess=null;PF.sl=null;PF.uo=null;PF.pick=null;PF.ver=-1;PF.moveCount=-1;PF.sel=null;PF.legal=[];PF.endSounded=false;PF.lastReact=0;
       keep(id);try{ggSetHash('play-friend/'+id,true);}catch(e){}
       $('pf-lobby').hidden=true;$('pf-room').hidden=false;
       PF.unsub=b.watchRoom(id,(room,err)=>{if(err){console.warn('watch',err);return;}apply(room);});
@@ -8136,7 +8138,7 @@ The child's messages follow.`;
   function stopWatching(clearSaved){
     if(PF.unsub){try{PF.unsub();}catch(e){}PF.unsub=null;}
     clearInterval(PF.hb);clearInterval(PF.tick);PF.hb=PF.tick=null;
-    PF.id=null;PF.data=null;PF.chess=null;PF.sel=null;PF.legal=[];PF.ver=-1;
+    PF.id=null;PF.data=null;PF.chess=null;PF.uo=null;PF.pick=null;PF.sel=null;PF.legal=[];PF.ver=-1;
     if(clearSaved)keep('');
   }
   async function heartbeat(){
@@ -8158,6 +8160,7 @@ The child's messages follow.`;
     // rebuild the position from the list of moves, checking every one
     let g=null;
     if(d.game==='sl'){PF.sl=slState(d.moves||[]);PF.chess=null;PF.flip=false;}
+    else if(d.game==='uno'||d.game==='nm'){try{PF.uo=JSON.parse(d.st);}catch(e){return;}PF.chess=null;PF.flip=false;}
     else{
       if(!hasLib())return;
       g=new Chess();
@@ -8165,11 +8168,12 @@ The child's messages follow.`;
       PF.chess=g;PF.flip=myColor(d)==='b';
       if(PF.sel&&!g.moves({square:PF.sel}).length){PF.sel=null;PF.legal=[];}
     }
-    const before=PF.moveCount;PF.moveCount=(d.moves||[]).length;
+    const before=PF.moveCount;PF.moveCount=PF.uo&&(d.game==='uno'||d.game==='nm')?PF.uo.n:(d.moves||[]).length;
     PF.ver=d.ver;PF.data=d;
     if(PF.moveCount>before&&before>=0){
       if(g){const last=g.history({verbose:true}).pop();if(last){sfxs(g.in_check()?'check':(last.captured?'capture':'move'));}}
-      else{const L=PF.sl.last;if(L)sfxs(L.kind==='ladder'?'ladder':L.kind==='snake'?'snake':'step');}
+      else if(d.game==='sl'){const L=PF.sl.last;if(L)sfxs(L.kind==='ladder'?'ladder':L.kind==='snake'?'snake':'step');}
+      else uoSound(PF.uo&&PF.uo.log[0]);
     }
     if(d.react&&d.react.n!==PF.lastReact){
       if(PF.lastReact!==0&&d.react.by!==PF.me)bubble(REACTS[d.react.k]+' '+REACT_TEXT[d.react.k]);
@@ -8190,14 +8194,18 @@ The child's messages follow.`;
     el.className='pf-bar'+(turn?' turn':'');el.innerHTML='<span class="av-wrap" style="width:40px;height:40px;flex:none"></span><span class="nm"><span class="n"></span><small></small></span><span class="col" aria-hidden="true"></span>';
     el.querySelector('.n').textContent=nick+(isMe?' (you)':'');
     const isSL=PF.data&&PF.data.game==='sl';
-    el.querySelector('.col').textContent=isSL?(color==='w'?'🟠':'🔵'):(color==='w'?'⚪':'⚫');
-    el.querySelector('small').textContent=(isSL?(color==='w'?'Orange':'Blue'):(color==='w'?'White':'Black'))+(turn?(isSL?' · to roll':' · to move'):'');
+    const isUO=PF.data&&(PF.data.game==='uno'||PF.data.game==='nm')&&PF.uo;
+    el.querySelector('.col').textContent=isUO?'🎴 '+(PF.uo.h[color]||[]).length:isSL?(color==='w'?'🟠':'🔵'):(color==='w'?'⚪':'⚫');
+    el.querySelector('small').textContent=isUO?(turn?'to play':'')||' ':(isSL?(color==='w'?'Orange':'Blue'):(color==='w'?'White':'Black'))+(turn?(isSL?' · to roll':' · to move'):'');
     const look=PF.looks[uid];
     el.querySelector('.av-wrap').appendChild(window.renderAvatar(look||{},40,{still:true}));
     if(!look&&uid&&!PF.looks.hasOwnProperty(uid)){PF.looks[uid]=null;const b=await GG.connect();if(b)b.player(uid).then(r=>{if(r&&r.look){PF.looks[uid]=r.look;if(PF.data)render();}}).catch(()=>{});}
   }
   function render(){
     const d=PF.data,g=PF.chess;
+    const isU=!!(d&&(d.game==='uno'||d.game==='nm'));
+    $('pf-chboard').hidden=isU;$('pf-uno').hidden=!isU;
+    if(isU&&PF.uo&&!$('pf-room').hidden){renderUO();return;}
     if(d&&d.game==='sl'&&PF.sl&&!$('pf-room').hidden){renderSL();return;}
     if(!d||!g||$('pf-room').hidden)return;
     $('pf-board').style.gridTemplateColumns='';$('pf-rank-labels').hidden=false;$('pf-file-labels').hidden=false;
@@ -8238,7 +8246,7 @@ The child's messages follow.`;
   }
   function btn(label,cls,fn,aria){const b=document.createElement('button');b.type='button';b.className='pf-btn '+(cls||'');b.textContent=label;if(aria)b.setAttribute('aria-label',aria);b.onclick=fn;return b;}
   function renderStatus(){
-    const d=PF.data,g=PF.chess;if(!d||(!g&&d.game!=='sl'))return;
+    const d=PF.data,g=PF.chess;if(!d||(!g&&d.game!=='sl'&&d.game!=='uno'&&d.game!=='nm'))return;
     const st=$('pf-status'),sub=$('pf-sub'),bx=$('pf-btns');bx.innerHTML='';sub.textContent='';
     const mc=myColor(d),opp=oppNick(d);
     if(d.status==='waiting'){
@@ -8250,7 +8258,7 @@ The child's messages follow.`;
     }
     if(d.status==='done'){
       const won=d.result===mc;
-      const why={checkmate:'by checkmate',resign:d.result===mc?(opp+' resigned'):'you resigned',stalemate:'stalemate: no legal moves',agreed:'you agreed to a draw',left:(d.result===mc?opp+' left the game':'game ended because you left'),repetition:'same position three times',home:(d.result===mc?'you reached square 100':opp+' reached square 100'),'insufficient':'not enough pieces to checkmate','fifty':'50 moves without a capture'}[d.reason]||'';
+      const why={checkmate:'by checkmate',resign:d.result===mc?(opp+' resigned'):'you resigned',stalemate:'stalemate: no legal moves',agreed:'you agreed to a draw',left:(d.result===mc?opp+' left the game':'game ended because you left'),repetition:'same position three times',home:(d.result===mc?'you reached square 100':opp+' reached square 100'),empty:(d.result===mc?'you played your last card':opp+' played their last card'),mercy:'a player reached 25 cards (Mercy rule)','insufficient':'not enough pieces to checkmate','fifty':'50 moves without a capture'}[d.reason]||'';
       st.textContent=d.result==='draw'?'🤝 It is a draw!':(won?'🎉 You won!':'😅 '+opp+' won this time');
       sub.textContent=why?why.charAt(0).toUpperCase()+why.slice(1)+'.':'';
       bx.appendChild(btn('🔁 Rematch (swap colours)','go',rematch));
@@ -8259,6 +8267,7 @@ The child's messages follow.`;
     }
     // playing
     if(d.game==='sl'){slPlaying(d,st,sub,bx,mc,opp);return;}
+    if(d.game==='uno'||d.game==='nm'){uoPlaying(d,st,sub,bx,mc,opp);return;}
     const myTurn=d.turn===mc;
     st.textContent=myTurn?(g.in_check()?'⚠️ You are in check! Your move.':'✨ Your move!'):('⏳ '+opp+' is thinking…'+(g.in_check()?' (check!)':''));
     const oppHb=tsMs(d.host===PF.me?d.hbG:d.hbH),away=oppHb&&Date.now()-oppHb>AWAY_MS;
@@ -8325,6 +8334,264 @@ The child's messages follow.`;
     if(!ok){PF.data=d;PF.ver=d.ver;PF.sl=slState(d.moves||[]);PF.moveCount=(d.moves||[]).length;renderSL();}
   }
 
+  // ── Uno and Uno No Mercy (2 players) ──
+  // The whole game (both hands, the piles, whose turn) is one small piece of data. Whoever acts works out the new
+  // data and saves it; the other screen shows it. (Friends can't peek on screen, but this is built for friends who trust each other.)
+  const UO_COLORS=['red','blue','green','yellow'];
+  const UO_HEX={red:'#EF4444',blue:'#3B82F6',green:'#22C55E',yellow:'#F59E0B',wild:'#1B1F3B'};
+  const UO_LAB={skip:'⊘',reverse:'↩',draw2:'+2',draw4:'+4',discardall:'ALL',skipall:'⊘⊘',wrd4:'↩+4',wd6:'+6',wd10:'+10',roulette:'🎰',wild:'W',wild4:'+4'};
+  const UO_NAME={skip:'Skip',reverse:'Reverse',draw2:'Draw Two',draw4:'Draw Four',discardall:'Discard All',skipall:'Skip Everyone',wrd4:'Wild Reverse Draw 4',wd6:'Wild Draw 6',wd10:'Wild Draw 10',roulette:'Colour Roulette',wild:'Wild',wild4:'Wild Draw Four'};
+  const UO_DRAW={draw2:2,draw4:4,wrd4:4,wd6:6,wd10:10};
+  const oth=p=>p==='w'?'b':'w';
+  const uoShuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const uoCardName=c=>(c.c==='wild'?'':c.c+' ')+(UO_NAME[c.v]||c.v);
+  function uoDeckOf(k){
+    const d=[];let id=1;
+    if(k==='uno'){
+      UO_COLORS.forEach(c=>{d.push({id:id++,c,v:'0'});['1','2','3','4','5','6','7','8','9','skip','reverse','draw2'].forEach(v=>{d.push({id:id++,c,v});d.push({id:id++,c,v});});});
+      for(let i=0;i<4;i++){d.push({id:id++,c:'wild',v:'wild'});d.push({id:id++,c:'wild',v:'wild4'});}
+    }else{
+      UO_COLORS.forEach(c=>{
+        for(let n=0;n<=9;n++){d.push({id:id++,c,v:String(n)});d.push({id:id++,c,v:String(n)});}
+        ['skip','reverse','draw2','discardall'].forEach(v=>{for(let q=0;q<3;q++)d.push({id:id++,c,v});});
+        ['skipall','draw4'].forEach(v=>{for(let q=0;q<2;q++)d.push({id:id++,c,v});});
+      });
+      [['wrd4',8],['wd6',4],['wd10',4],['roulette',8]].forEach(([v,n])=>{for(let q=0;q<n;q++)d.push({id:id++,c:'wild',v});});
+    }
+    return d;
+  }
+  function uoLog(S,p,t,c){S.n=(S.n|0)+1;S.log.unshift(c?{p,t,c}:{p,t});if(S.log.length>8)S.log.length=8;}
+  const uoTop=S=>S.disc[S.disc.length-1];
+  function uoCard(S){
+    if(!S.deck.length&&S.disc.length>1){const top=S.disc.pop();S.deck=uoShuf(S.disc.concat(S.aside));S.disc=[top];S.aside=[];uoLog(S,null,'The draw pile ran out: the discard pile was shuffled');}
+    return S.deck.length?S.deck.pop():null;
+  }
+  function uoMercy(S,p){
+    if(S.k==='nm'&&!S.over&&S.h[p].length>=25){S.aside=S.aside.concat(S.h[p]);S.h[p]=[];S.over={w:oth(p),why:'mercy'};uoLog(S,p,'reached 25 cards: knocked out by the Mercy rule!');}
+  }
+  function uoGive(S,p,n){let g=0;for(let i=0;i<n;i++){const c=uoCard(S);if(!c)break;S.h[p].push(c);g++;}uoMercy(S,p);return g;}
+  function uoNew(k){
+    const deck=uoShuf(uoDeckOf(k));
+    const S={k,deck,disc:[],aside:[],h:{w:[],b:[]},turn:'w',color:'',pend:0,pmin:0,forced:0,drew:0,aw:null,call:{w:false,b:false},catch:null,over:null,log:[],n:0};
+    for(let i=0;i<7;i++){S.h.w.push(deck.pop());S.h.b.push(deck.pop());}
+    let first=deck.pop();
+    if(k==='uno'){while(first.v==='wild4'){deck.push(first);uoShuf(deck);first=deck.pop();}}
+    else{while(!/^\d$/.test(first.v)){deck.unshift(first);first=deck.pop();}}
+    S.disc=[first];S.color=first.c==='wild'?'':first.c;
+    uoLog(S,null,'Game started! First card: ',first);
+    if(k==='uno'){
+      if(first.v==='skip'||first.v==='reverse'){uoLog(S,'w','is skipped by the first card');S.turn='b';}
+      else if(first.v==='draw2'){uoGive(S,'w',2);uoLog(S,'w','draws 2 and is skipped');S.turn='b';}
+      else if(first.v==='wild'){S.aw={k:'init',by:'w'};}
+    }
+    return S;
+  }
+  function uoCan(S,p,c){
+    if(S.k==='nm'){
+      if(S.pend>0)return (UO_DRAW[c.v]||0)>=S.pmin;
+      if(S.forced)return c.id===S.forced;
+      if(c.c==='wild')return true;
+      return c.c===S.color||c.v===uoTop(S).v;
+    }
+    if(S.drew&&c.id!==S.drew)return false;
+    if(c.v==='wild')return true;
+    if(c.v==='wild4')return !S.h[p].some(x=>x.c===S.color);
+    return c.c===S.color||c.v===uoTop(S).v;
+  }
+  // p does action a. Returns the new game data, or null when it is not allowed.
+  function uoAct(S0,p,a){
+    if(!S0||S0.over||!a)return null;
+    const S=JSON.parse(JSON.stringify(S0)),o=oth(p),H=S.h[p],nm=S.k==='nm';
+    if(a.t==='uno'){
+      if(S.catch&&S.catch.p===p){S.catch=null;uoLog(S,p,'called UNO just in time!');return S;}
+      if(S.turn===p&&!S.aw&&H.length===2&&!S.call[p]){S.call[p]=true;uoLog(S,p,'is calling UNO!');return S;}
+      return null;
+    }
+    if(a.t==='catch'){
+      if(!S.catch||S.catch.p===p)return null;
+      const q=S.catch.p;S.catch=null;const g=uoGive(S,q,2);uoLog(S,p,'caught '+'their friend not calling UNO: +'+g+' cards');return S;
+    }
+    if(a.t==='color'){
+      if(!S.aw||S.aw.by!==p||UO_COLORS.indexOf(a.c)<0)return null;
+      if(S.aw.k==='init'){S.color=a.c;S.aw=null;uoLog(S,p,'chose '+a.c);return S;}
+      S.color=a.c;let fl=0;
+      while(true){const x=uoCard(S);if(!x)break;H.push(x);fl++;if(x.c===a.c||H.length>=25)break;}
+      uoLog(S,p,'chose '+a.c+' and flipped '+fl+' card'+(fl===1?'':'s'));S.aw=null;uoMercy(S,p);
+      if(!S.over)S.turn=o;
+      return S;
+    }
+    if(S.aw||S.turn!==p)return null;
+    S.catch=null;
+    if(a.t==='play'){
+      const c=H.find(x=>x.id===a.id);if(!c||!uoCan(S,p,c))return null;
+      const needCol=c.c==='wild'&&c.v!=='roulette';
+      if(needCol&&UO_COLORS.indexOf(a.c)<0)return null;
+      H.splice(H.indexOf(c),1);S.disc.push(c);S.forced=0;S.drew=0;
+      if(c.c!=='wild')S.color=c.c;else if(needCol)S.color=a.c;
+      uoLog(S,p,'played ',c);
+      if(H.length===1){if(S.call[p])uoLog(S,p,'called UNO!');else S.catch={p};}
+      S.call[p]=false;
+      if(H.length===0){S.over={w:p,why:'empty'};return S;}
+      const v=c.v;
+      if(!nm){
+        if(v==='skip'||v==='reverse'){S.turn=p;uoLog(S,o,'was skipped');}
+        else if(v==='draw2'||v==='wild4'){const n=v==='draw2'?2:4,g=uoGive(S,o,n);uoLog(S,o,'draws '+g+' and loses the turn');S.turn=S.over?o:p;}
+        else S.turn=o;
+        return S;
+      }
+      if(UO_DRAW[v]){S.pend+=UO_DRAW[v];S.pmin=UO_DRAW[v];S.turn=o;uoLog(S,null,'The draw stack is now +'+S.pend);return S;}
+      if(v==='roulette'){S.aw={k:'roulette',by:o};S.turn=o;return S;}
+      if(v==='skip'||v==='skipall'||v==='reverse'){S.turn=p;uoLog(S,o,'was skipped');return S;}
+      if(v==='discardall'){
+        const same=H.filter(x=>x.c===c.c);
+        same.forEach(x=>{H.splice(H.indexOf(x),1);S.disc.splice(S.disc.length-1,0,x);});
+        if(same.length)uoLog(S,p,'also discarded '+same.length+' more '+c.c+' card'+(same.length===1?'':'s'));
+        if(!H.length){S.over={w:p,why:'empty'};return S;}
+        if(H.length===1&&same.length)S.catch={p};
+        S.turn=o;return S;
+      }
+      if(v==='7'||v==='0'){
+        const t=S.h[p];S.h[p]=S.h[o];S.h[o]=t;S.catch=null;uoLog(S,p,'swapped hands with their friend');
+        uoMercy(S,p);if(!S.over)uoMercy(S,o);if(!S.over)S.turn=o;return S;
+      }
+      S.turn=o;return S;
+    }
+    if(a.t==='draw'){
+      if(nm){
+        if(S.pend>0||S.forced)return null;
+        let n=0,card=null;
+        while(true){const x=uoCard(S);if(!x)break;H.push(x);n++;if(H.length>=25){uoLog(S,p,'drew '+n+' cards');uoMercy(S,p);return S;}if(uoCan(S,p,x)){card=x;break;}}
+        uoLog(S,p,'drew '+n+' card'+(n===1?'':'s'));
+        if(card)S.forced=card.id;else S.turn=o;
+        return S;
+      }
+      if(S.drew)return null;
+      const x=uoCard(S);
+      if(!x){uoLog(S,p,'had nothing to draw and passed');S.turn=o;return S;}
+      H.push(x);S.drew=x.id;uoLog(S,p,'drew a card');return S;
+    }
+    if(a.t==='take'){
+      if(!nm||S.pend<=0)return null;
+      const n=S.pend;S.pend=0;S.pmin=0;const g=uoGive(S,p,n);uoLog(S,p,'took '+g+' cards and lost the turn');
+      if(!S.over)S.turn=o;return S;
+    }
+    if(a.t==='pass'){
+      if(nm||!S.drew)return null;
+      S.drew=0;uoLog(S,p,'passed');S.turn=o;return S;
+    }
+    return null;
+  }
+  GG._uo={uoNew,uoAct,uoCan};
+  function uoSound(e){
+    if(!e)return;const t=(e.t||'')+(e.c?e.c.v:'');
+    if(/drew|took|flipped|caught/.test(t))sfxs('draw');
+    else if(e.c&&UO_DRAW[e.c.v])sfxs('hit');
+    else if(e.c&&(e.c.v==='skip'||e.c.v==='skipall'))sfxs('skip');
+    else if(e.c&&e.c.v==='reverse')sfxs('reverse');
+    else if(e.c&&e.c.c==='wild')sfxs('wild');
+    else if(/UNO/.test(t))sfxs('uno');
+    else sfxs('card');
+  }
+  const uoWho=(p,mc,opp)=>p===null||p===undefined?'':(p===mc?'You':opp);
+  const uoLine=(e,mc,opp)=>{if(!e)return '';const w=uoWho(e.p,mc,opp);let s=(w?w+' ':'')+e.t+(e.c?uoCardName(e.c):'');if(w==='You')s=s.replace(/^You (is|was|has|draws|loses)\b/,(m,x)=>'You '+({is:'are',was:'were',has:'have',draws:'draw',loses:'lose'})[x]);return s;};
+  function uoCardEl(c,playable,onclick,mine){
+    const bg=c.c==='wild'?'linear-gradient(135deg,#EF4444 25%,#3B82F6 25%,#3B82F6 50%,#22C55E 50%,#22C55E 75%,#F59E0B 75%)':UO_HEX[c.c];
+    const lab=UO_LAB[c.v]||c.v;
+    const el=document.createElement('div');el.className='uno-card'+(playable?'':' unplayable');el.style.background=bg;
+    if(String(lab).length>2)el.style.fontSize='.85rem';
+    el.innerHTML='<span style="font-size:.62rem;position:absolute;top:3px;left:5px;"></span><span></span><span style="font-size:.62rem;position:absolute;bottom:3px;right:5px;transform:rotate(180deg);"></span>';
+    el.querySelectorAll('span').forEach(s=>s.textContent=lab);
+    const tip=uoCardName(c)+(mine?(playable?', playable':', not playable now'):'');
+    el.setAttribute('aria-label',tip);el.title=tip;
+    if(onclick){el.setAttribute('role','button');el.tabIndex=0;el.addEventListener('click',onclick);el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onclick();}});}
+    else el.setAttribute('role','img');
+    return el;
+  }
+  function renderUO(){
+    const d=PF.data,S=PF.uo;if(!d||!S)return;
+    const mc=myColor(d),oc=oth(mc),oppUid=d.host===PF.me?d.guest:d.host,live=d.status==='playing'&&!S.over;
+    barHTML($('pf-top'),oppUid,d.guest||d.host!==PF.me?oppNick(d):'Waiting…',oc,live&&S.turn===oc,false);
+    barHTML($('pf-bottom'),PF.me,nickOf(GG.profile().nick),mc,live&&S.turn===mc,true);
+    const box=$('pf-uno');box.innerHTML='';
+    if(d.status==='waiting'){box.hidden=true;renderStatus();renderReactions();return;}
+    box.hidden=false;
+    const myTurn=live&&S.turn===mc&&!S.aw;
+    // table: opponent's cards, pile, colour
+    const tb=document.createElement('div');tb.className='pf-uo-table';
+    const oppN=S.h[oc].length;
+    const ob=document.createElement('div');ob.className='pf-uo-opp';ob.textContent='🂠 '.repeat(Math.min(oppN,12)).trim()+(oppN>12?' …':'')+'  ('+oppN+' card'+(oppN===1?'':'s')+')';ob.setAttribute('aria-label',oppNick(d)+' has '+oppN+' cards');tb.appendChild(ob);
+    const mid=document.createElement('div');mid.className='pf-uo-mid';
+    mid.appendChild(uoCardEl(uoTop(S),false,null,false));
+    const info=document.createElement('div');info.className='pf-uo-info';
+    const chip=document.createElement('span');chip.className='pf-uo-chip';chip.style.background=UO_HEX[S.color]||'#ccc';chip.textContent=S.color?S.color:'pick a colour';info.appendChild(document.createTextNode('Colour: '));info.appendChild(chip);
+    if(S.pend>0){const pp=document.createElement('div');pp.className='pf-uo-pend';pp.textContent='📚 Stack: +'+S.pend;info.appendChild(pp);}
+    mid.appendChild(info);tb.appendChild(mid);box.appendChild(tb);
+    // colour picker (for a wild card you chose, or when the game asks you)
+    const asked=S.aw&&S.aw.by===mc&&live;
+    if(asked||PF.pick){
+      const pk=document.createElement('div');pk.className='pf-uo-pick';
+      const h=document.createElement('div');h.className='pf-uo-pickh';h.textContent=asked&&S.aw.k==='roulette'?'🎰 Colour Roulette! Pick a colour. You flip cards until it shows up and keep them all.':'🎨 Choose a colour';pk.appendChild(h);
+      const row=document.createElement('div');row.className='pf-uo-pickrow';
+      UO_COLORS.forEach(cl=>{const b=document.createElement('button');b.type='button';b.style.background=UO_HEX[cl];b.textContent=cl;b.setAttribute('aria-label','Choose '+cl);b.onclick=()=>{if(asked)uoSend({t:'color',c:cl});else{const id=PF.pick;PF.pick=null;uoSend({t:'play',id,c:cl});}};row.appendChild(b);});
+      pk.appendChild(row);
+      if(!asked){const cb=document.createElement('button');cb.type='button';cb.className='pf-btn';cb.textContent='Cancel';cb.onclick=()=>{PF.pick=null;render();};pk.appendChild(cb);}
+      box.appendChild(pk);
+    }
+    // my hand
+    const hd=document.createElement('div');hd.className='pf-uo-hand';hd.setAttribute('role','group');hd.setAttribute('aria-label','Your cards');
+    S.h[mc].forEach(c=>{
+      const ok=myTurn&&uoCan(S,mc,c);
+      hd.appendChild(uoCardEl(c,ok||!live,ok?()=>{
+        if(PF.busy)return;
+        if(c.c==='wild'&&c.v!=='roulette'){PF.pick=c.id;render();}
+        else{PF.pick=null;uoSend({t:'play',id:c.id});}
+      }:null,true));
+      if(!ok&&live)hd.lastChild.classList.add('unplayable');
+    });
+    box.appendChild(hd);
+    $('pf-moves').textContent=S.log.slice(0,6).map(e=>uoLine(e,mc,oppNick(d))).join('  •  ')||'';
+    renderStatus();renderReactions();
+  }
+  function uoPlaying(d,st,sub,bx,mc,opp){
+    const S=PF.uo,H=S.h[mc];
+    const asked=S.aw&&S.aw.by===mc;
+    const myTurn=S.turn===mc&&!S.aw;
+    if(asked)st.textContent=S.aw.k==='roulette'?'🎰 Pick a colour for the roulette!':'🎨 Pick a colour to start';
+    else if(S.aw)st.textContent='⏳ '+opp+' is choosing…';
+    else st.textContent=myTurn?'✨ Your turn!':'⏳ '+opp+' is playing…';
+    sub.textContent=uoLine(S.log[0],mc,opp);
+    if(myTurn){
+      if(S.k==='nm'){
+        if(S.pend>0){bx.appendChild(btn('💥 Take +'+S.pend,'warn',()=>uoSend({t:'take'})));sub.textContent='Play a +'+S.pmin+' card (or higher) to stack, or take the cards. '+sub.textContent;}
+        else if(S.forced)sub.textContent='You drew a playable card, so you must play it.';
+        else bx.appendChild(btn('🃏 Draw cards','',()=>uoSend({t:'draw'}),'Draw cards until you get one you can play'));
+      }else{
+        if(S.drew){bx.appendChild(btn('Pass','',()=>uoSend({t:'pass'})));sub.textContent='You drew a card. Play it if you can, or pass.';}
+        else bx.appendChild(btn('🃏 Draw a card','',()=>uoSend({t:'draw'})));
+      }
+      if(H.length===2&&!S.call[mc])bx.appendChild(btn('📣 UNO!','go',()=>uoSend({t:'uno'}),'Call UNO'));
+    }
+    if(S.catch&&S.catch.p===mc)bx.appendChild(btn('📣 Say UNO now!','go',()=>uoSend({t:'uno'})));
+    if(S.catch&&S.catch.p!==mc)bx.appendChild(btn('🚨 Catch '+opp+'!','warn',()=>uoSend({t:'catch'}),opp+' has one card and did not say UNO'));
+    const oppHb=tsMs(d.host===PF.me?d.hbG:d.hbH),away=oppHb&&Date.now()-oppHb>AWAY_MS;
+    if(away){sub.textContent=opp+' seems to be away. They have a little time to come back.';
+      if(Date.now()-oppHb>AWAY_MS*1.5)bx.appendChild(btn('🏆 Claim the win','go',claimWin));}
+    bx.appendChild(btn('🏳️ Resign','warn',()=>{if(confirm('Resign this game? '+opp+' will win.'))finish(oth(mc),'resign');}));
+    bx.appendChild(btn('Leave for now','',()=>{showPage('profile');}));
+  }
+  async function uoSend(a){
+    const d=PF.data;if(!d||PF.busy||d.status!=='playing'||!PF.uo)return;
+    const mc=myColor(d),N=uoAct(PF.uo,mc,a);if(!N)return;
+    PF.busy=true;PF.pick=null;
+    const p={st:JSON.stringify(N),turn:N.turn,ver:d.ver+1,drawOffer:null};
+    if(N.over){p.status='done';p.result=N.over.w;p.reason=N.over.why;}
+    const old={data:d,uo:PF.uo,cnt:PF.moveCount};
+    PF.data=Object.assign({},d,p);PF.ver=p.ver;PF.uo=N;PF.moveCount=N.n;render();
+    uoSound(N.log[0]);
+    const ok=await patch(p);PF.busy=false;
+    if(!ok){PF.data=old.data;PF.ver=old.data.ver;PF.uo=old.uo;PF.moveCount=old.cnt;render();}
+  }
+
   // ── actions ──
   async function patch(p){
     try{const b=await GG.connect();if(!b)throw new Error('offline');await b.patchRoom(PF.id,p);return true;}
@@ -8385,7 +8652,7 @@ The child's messages follow.`;
     if(PF.invUnsub)return;
     try{
       const b=await GG.connect();if(!b||!b.watchInvites)return;PF.me=b.uid;
-      PF.invUnsub=b.watchInvites(list=>{PF.invites=(list||[]).filter(i=>i&&(i.game==='chess'||i.game==='sl')&&/^[A-Z0-9]{6}$/.test(i.room||'')&&(!tsMs(i.at)||Date.now()-tsMs(i.at)<INVITE_MS));paintInvites();});
+      PF.invUnsub=b.watchInvites(list=>{PF.invites=(list||[]).filter(i=>i&&GI[i.game]&&/^[A-Z0-9]{6}$/.test(i.room||'')&&(!tsMs(i.at)||Date.now()-tsMs(i.at)<INVITE_MS));paintInvites();});
     }catch(e){console.warn('invites',e);}
   }
   async function paintInvites(){
@@ -8398,7 +8665,7 @@ The child's messages follow.`;
     PF.shownInvite=i.from+i.room;
     let nm='A friend';try{const b=await GG.connect();const r=await b.player(i.from);if(r&&r.nick)nm=nickOf(r.nick);}catch(e){}
     box.innerHTML='<b></b><div class="pf-btns" style="margin:0"></div>';
-    box.querySelector('b').textContent=(i.game==='sl'?'🐍 ':'♟️ ')+nm+' invited you to play '+(i.game==='sl'?'Snake & Ladders':'chess')+'!';
+    box.querySelector('b').textContent=GI[i.game].i+' '+nm+' invited you to play '+GI[i.game].n+'!';
     const bt=box.querySelector('.pf-btns');
     bt.appendChild(btn('Join the game','go',async()=>{box.hidden=true;const b=await GG.connect();if(b)b.dropInvite(i.from).catch(()=>{});window.GG_PENDING_ROOM=i.room;showPage('play-friend');}));
     bt.appendChild(btn('No thanks','',async()=>{box.hidden=true;const b=await GG.connect();if(b)b.dropInvite(i.from).catch(()=>{});}));
@@ -8411,6 +8678,18 @@ The child's messages follow.`;
 </script>
 
 <style>
+.pf-uo-table{background:#fff;border:2px solid var(--border);border-radius:18px;padding:10px 12px;margin-bottom:10px;text-align:center;}
+.pf-uo-opp{font-size:1.1rem;letter-spacing:1px;color:var(--muted);margin-bottom:8px;word-break:break-word;}
+.pf-uo-mid{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;}
+.pf-uo-info{font-family:'Fredoka',sans-serif;font-weight:700;color:var(--ink);text-align:left;}
+.pf-uo-chip{display:inline-block;padding:2px 12px;border-radius:999px;color:#fff;font-weight:800;text-transform:capitalize;}
+.pf-uo-pend{margin-top:4px;color:#B91C1C;}
+.pf-uo-hand{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:4px 0 8px;}
+.pf-uo-hand .uno-card:hover{transform:none;}
+.pf-uo-pick{background:#fff8e1;border:2px solid var(--amber);border-radius:16px;padding:10px;margin-bottom:10px;text-align:center;}
+.pf-uo-pickh{font-family:'Fredoka',sans-serif;font-weight:700;margin-bottom:8px;color:var(--ink);}
+.pf-uo-pickrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px;}
+.pf-uo-pickrow button{min-height:48px;border:3px solid #fff;border-radius:12px;color:#fff;font-family:'Fredoka',sans-serif;font-weight:800;font-size:.95rem;text-transform:capitalize;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);}
 .pf-slsq{aspect-ratio:1;position:relative;background:#FFEBB3;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow:hidden;font-family:Nunito,sans-serif;}
 .pf-slsq.b{background:#FFF3D1;}.pf-slsq.last{background:#CFF3DC;outline:2px solid #1E9E5A;outline-offset:-2px;}.pf-slsq.goal{background:#FFD36B;}
 .pf-slsq i{font-style:normal;font-size:8px;font-weight:800;color:#585C78;line-height:1.2;padding-top:1px;}
@@ -8420,7 +8699,7 @@ The child's messages follow.`;
 <script>
 // ══════════ PLAY NOW: with the computer, or with a friend ══════════
 (function(){
-  const G={sl:{name:'Snake & Ladders',page:'sl-game',online:true,og:'sl'},chess:{name:'Chess',page:'chess',solo:true,online:true},uno:{name:'Uno',page:'uno-game',online:false},nm:{name:"Uno Show 'Em No Mercy",page:'uno-nomercy-game',online:false}};
+  const G={sl:{name:'Snake & Ladders',page:'sl-game',online:true,og:'sl'},chess:{name:'Chess',page:'chess',solo:true,online:true},uno:{name:'Uno',page:'uno-game',online:true,og:'uno'},nm:{name:"Uno Show 'Em No Mercy",page:'uno-nomercy-game',online:true,og:'nm'}};
   let box=null,last=null;
   function close(){if(box){box.remove();box=null;}if(last&&last.focus)try{last.focus();}catch(e){}}
   window.ggPlayChoose=function(k){
